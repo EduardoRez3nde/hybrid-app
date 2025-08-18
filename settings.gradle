@@ -1,0 +1,13 @@
+rootProject.name = 'hybrid-service'
+
+include(
+        "config-server",
+        "discovery-server",
+        "api-gateway",
+
+        "user-service",
+        "taxi-delivery-service",
+        "delivery-service",
+        "notification-service",
+        "payment-service"
+)
