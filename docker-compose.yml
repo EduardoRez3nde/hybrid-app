@@ -1,0 +1,60 @@
+services:
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - hybrid-service-network
+    environment:
+      - MANAGEMENT_HEALTH_DISCOVERY_ENABLED=false
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOWDETAILS=always
+  discovery-server:
+    build: ./discovery-server
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    networks:
+      - hybrid-service-network
+    environment:
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=5000
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL=20000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "9000:9000"
+    networks:
+      - hybrid-service-network
+    depends_on:
+      - config-server
+    extra_hosts:
+      - "localhost:172.17.0.1"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SERVER_PORT=9000
+      - spring.cloud.config.fail-fast=true
+      - spring.cloud.config.retry.max-attempts=20
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.3
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_RELATIVE_PATH: /auth
+    ports:
+      - "8181:8080"
+    networks:
+      - hybrid-service-network
+networks:
+  hybrid-service-network:
+    driver: bridge
+
+
