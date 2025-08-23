@@ -11,7 +11,7 @@ include(
         "config-server",
         "discovery-server",
         "api-gateway",
-//        "user-service",
+        "user-service",
 //        "taxi-service",
 //        "delivery-service",
 //        "notification-service",
