@@ -137,5 +137,39 @@ public class UserServiceTests {
         verify(passwordEncoder).encode("123456");
     }
 
+    @Test
+    @DisplayName("Todo novo usuário registrado recebe o papel CUSTOMER")
+    void shouldAssignCustomerRoleWhenRegisteringNewUser() {
 
+        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+                "Fulano",
+                "fulano@gmail.com",
+                "123456"
+        );
+
+        when(userRepository.findByEmail(registerUser.email()))
+                .thenReturn(Optional.empty());
+
+        when(passwordEncoder.encode(registerUser.password()))
+                .thenReturn("encoded-123456");
+
+        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(userCaptor.capture()))
+                .thenAnswer(invocation -> {
+                    final User user = invocation.getArgument(0);
+                    user.setId(UUID.randomUUID());
+                    return user;
+                });
+
+        final UserResponseDTO response = userService.register(registerUser);
+        final User saved = userCaptor.getValue();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(RoleType.CUSTOMER, response.roleType());
+        Assertions.assertEquals(RoleType.CUSTOMER, saved.getRoleType());
+
+        verify(userRepository).findByEmail(registerUser.email());
+        verify(userRepository, times(1)).save(any(User.class));
+        verify(passwordEncoder).encode("123456");
+    }
 }
