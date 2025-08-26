@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -78,7 +79,6 @@ public class UserServiceTests {
     @DisplayName("Quando o email já existe, lança EmailAlreadyExistsException")
     void shouldThrowExceptionWhenEmailAlreadyExists() {
 
-
         final RegisterUserDTO registerUser = RegisterUserDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
@@ -99,5 +99,43 @@ public class UserServiceTests {
         assertThatThrownBy(() -> userService.register(registerUser))
                 .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessageContaining("There is already a user with this email.");
+
+        verify(userRepository, never()).save(any(User.class));
+        verify(passwordEncoder, never()).encode(anyString());
     }
+
+    @Test
+    @DisplayName("Verificar se a senha e criptografada antes de salvar")
+    void shouldEncodePasswordBeforeSavingUser() {
+
+        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+                "Fulano",
+                "fulano@gmail.com",
+                "123456"
+        );
+
+        when(userRepository.findByEmail(registerUser.email()))
+                .thenReturn(Optional.empty());
+
+        when(passwordEncoder.encode(registerUser.password()))
+                .thenReturn("encoded-123456");
+
+        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(userCaptor.capture()))
+                .thenAnswer(invocation -> {
+                    final User user = invocation.getArgument(0);
+                    user.setId(UUID.randomUUID());
+                    return user;
+                });
+
+        final UserResponseDTO response = userService.register(registerUser);
+        final User saved = userCaptor.getValue();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("encoded-123456", saved.getPassword());
+
+        verify(passwordEncoder).encode("123456");
+    }
+
+
 }
