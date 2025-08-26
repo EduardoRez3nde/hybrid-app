@@ -4,6 +4,7 @@ import com.rezende.user_service.dto.RegisterUserDTO;
 import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.entities.User;
 import com.rezende.user_service.entities.enums.RoleType;
+import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.repositories.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -70,5 +72,32 @@ public class UserServiceTests {
         verify(userRepository).findByEmail(registerUser.email());
         verify(passwordEncoder).encode(registerUser.password());
         verify(userRepository, timeout(1)).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Quando o email já existe, lança EmailAlreadyExistsException")
+    void shouldThrowExceptionWhenEmailAlreadyExists() {
+
+
+        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+                "Fulano",
+                "fulano@gmail.com",
+                "123456"
+        );
+
+        final User existingUser = User.from(
+                "Fulano",
+                "fulano@gmail.com",
+                "encoded-123456",
+                RoleType.CUSTOMER
+        );
+        existingUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
+
+        when(userRepository.findByEmail(registerUser.email()))
+                .thenReturn(Optional.of(existingUser));
+
+        assertThatThrownBy(() -> userService.register(registerUser))
+                .isInstanceOf(EmailAlreadyExistsException.class)
+                .hasMessageContaining("There is already a user with this email.");
     }
 }
