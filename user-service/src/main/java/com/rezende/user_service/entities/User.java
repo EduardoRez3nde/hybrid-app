@@ -56,7 +56,7 @@ public class User {
         this.roleType = roleType;
     }
 
-    public User from(
+    public static User from(
             final String name,
             final String email,
             final String password,

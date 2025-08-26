@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/api-gateway" />
             <option value="$PROJECT_DIR$/config-server" />
             <option value="$PROJECT_DIR$/discovery-server" />
+            <option value="$PROJECT_DIR$/user-service" />
           </set>
         </option>
       </GradleProjectSettings>

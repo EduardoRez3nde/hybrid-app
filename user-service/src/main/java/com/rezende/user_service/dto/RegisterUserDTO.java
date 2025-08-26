@@ -1,8 +1,6 @@
 package com.rezende.user_service.dto;
 
-import com.rezende.user_service.entities.enums.RoleType;
-
-public record CreateUserDTO(
+public record RegisterUserDTO(
         String name,
         String email,
         String password
