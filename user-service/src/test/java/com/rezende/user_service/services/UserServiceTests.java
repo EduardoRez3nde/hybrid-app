@@ -1,7 +1,7 @@
 package com.rezende.user_service.services;
 
-import com.rezende.user_service.dto.RegisterUserDTO;
-import com.rezende.user_service.dto.UserResponseDTO;
+import com.rezende.user_service.dto.RegisterCustomerDTO;
+import com.rezende.user_service.dto.RegisterResponseDTO;
 import com.rezende.user_service.entities.User;
 import com.rezende.user_service.entities.enums.AccountStatus;
 import com.rezende.user_service.entities.enums.RoleType;
@@ -40,7 +40,7 @@ public class UserServiceTests {
     @DisplayName("Quando o email não existe, cria o usuário com sucesso")
     void shouldRegisterNewUserSuccessfully() {
 
-        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
                 "123456"
@@ -64,7 +64,7 @@ public class UserServiceTests {
         when(userRepository.save(any(User.class)))
                 .thenReturn(savedUser);
 
-        final UserResponseDTO response = userService.register(registerUser);
+        final RegisterResponseDTO response = userService.register(registerUser);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals("3e56c042-b325-4eb4-a8cb-d197c16f28d2", response.id());
@@ -81,7 +81,7 @@ public class UserServiceTests {
     @DisplayName("Quando o email já existe, lança EmailAlreadyExistsException")
     void shouldThrowExceptionWhenEmailAlreadyExists() {
 
-        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
                 "123456"
@@ -111,7 +111,7 @@ public class UserServiceTests {
     @DisplayName("Verificar se a senha e criptografada antes de salvar")
     void shouldEncodePasswordBeforeSavingUser() {
 
-        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
                 "123456"
@@ -131,7 +131,7 @@ public class UserServiceTests {
                     return user;
                 });
 
-        final UserResponseDTO response = userService.register(registerUser);
+        final RegisterResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
         Assertions.assertNotNull(response);
@@ -144,7 +144,7 @@ public class UserServiceTests {
     @DisplayName("Todo novo usuário registrado recebe o papel CUSTOMER")
     void shouldAssignCustomerRoleWhenRegisteringNewUser() {
 
-        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
                 "123456"
@@ -164,7 +164,7 @@ public class UserServiceTests {
                     return user;
                 });
 
-        final UserResponseDTO response = userService.register(registerUser);
+        final RegisterResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
         Assertions.assertNotNull(response);
@@ -180,7 +180,7 @@ public class UserServiceTests {
     @DisplayName("Todo novo usuário registrado recebe o status de conta ACTIVE")
     void shouldAssignActiveAccountStatusWhenRegisteringNewUser() {
 
-        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
                 "123456"
@@ -200,7 +200,7 @@ public class UserServiceTests {
                     return user;
                 });
 
-        final UserResponseDTO response = userService.register(registerUser);
+        final RegisterResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
         Assertions.assertNotNull(response);
