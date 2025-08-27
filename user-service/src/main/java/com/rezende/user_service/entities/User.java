@@ -1,5 +1,6 @@
 package com.rezende.user_service.entities;
 
+import com.rezende.user_service.entities.enums.AccountStatus;
 import com.rezende.user_service.entities.enums.RoleType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -40,29 +41,37 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     @NotNull(message = "{role.not.null}")
     @Column(nullable = false)
     private RoleType roleType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatus accountStatus;
 
     private User(
             final String name,
             final String email,
             final String password,
-            final RoleType roleType
+            final RoleType roleType,
+            final AccountStatus accountStatus
     ) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.roleType = roleType;
+        this.accountStatus = accountStatus;
     }
 
     public static User from(
             final String name,
             final String email,
             final String password,
-            final RoleType roleType
+            final RoleType roleType,
+            final AccountStatus accountStatus
     ) {
-        return new User(name, email, password, roleType);
+        return new User(name, email, password, roleType, accountStatus);
     }
 
 }

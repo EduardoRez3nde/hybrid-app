@@ -3,6 +3,7 @@ package com.rezende.user_service.services;
 import com.rezende.user_service.dto.RegisterUserDTO;
 import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.entities.User;
+import com.rezende.user_service.entities.enums.AccountStatus;
 import com.rezende.user_service.entities.enums.RoleType;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.repositories.UserRepository;
@@ -49,7 +50,8 @@ public class UserServiceTests {
                 "Fulano",
                 "fulano@gmail.com",
                 "encoded-123456",
-                RoleType.CUSTOMER
+                RoleType.CUSTOMER,
+                AccountStatus.ACTIVE
         );
         savedUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
 
@@ -89,7 +91,8 @@ public class UserServiceTests {
                 "Fulano",
                 "fulano@gmail.com",
                 "encoded-123456",
-                RoleType.CUSTOMER
+                RoleType.CUSTOMER,
+                AccountStatus.ACTIVE
         );
         existingUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
 
@@ -167,6 +170,42 @@ public class UserServiceTests {
         Assertions.assertNotNull(response);
         Assertions.assertEquals(RoleType.CUSTOMER, response.roleType());
         Assertions.assertEquals(RoleType.CUSTOMER, saved.getRoleType());
+
+        verify(userRepository).findByEmail(registerUser.email());
+        verify(userRepository, times(1)).save(any(User.class));
+        verify(passwordEncoder).encode("123456");
+    }
+
+    @Test
+    @DisplayName("Todo novo usuário registrado recebe o status de conta ACTIVE")
+    void shouldAssignActiveAccountStatusWhenRegisteringNewUser() {
+
+        final RegisterUserDTO registerUser = RegisterUserDTO.from(
+                "Fulano",
+                "fulano@gmail.com",
+                "123456"
+        );
+
+        when(userRepository.findByEmail(registerUser.email()))
+                .thenReturn(Optional.empty());
+
+        when(passwordEncoder.encode(registerUser.password()))
+                .thenReturn("encoded-123456");
+
+        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(userCaptor.capture()))
+                .thenAnswer(invocation -> {
+                    final User user = invocation.getArgument(0);
+                    user.setId(UUID.randomUUID());
+                    return user;
+                });
+
+        final UserResponseDTO response = userService.register(registerUser);
+        final User saved = userCaptor.getValue();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(AccountStatus.ACTIVE, response.accountStatus());
+        Assertions.assertEquals(AccountStatus.ACTIVE, saved.getAccountStatus());
 
         verify(userRepository).findByEmail(registerUser.email());
         verify(userRepository, times(1)).save(any(User.class));

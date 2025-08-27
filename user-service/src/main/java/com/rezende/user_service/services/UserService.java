@@ -3,6 +3,7 @@ package com.rezende.user_service.services;
 import com.rezende.user_service.dto.RegisterUserDTO;
 import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.entities.User;
+import com.rezende.user_service.entities.enums.AccountStatus;
 import com.rezende.user_service.entities.enums.RoleType;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.repositories.UserRepository;
@@ -34,7 +35,8 @@ public class UserService {
                 userDTO.name(),
                 userDTO.email(),
                 passwordEncoder.encode(userDTO.password()),
-                RoleType.CUSTOMER
+                RoleType.CUSTOMER,
+                AccountStatus.ACTIVE
         );
         user = userRepository.save(user);
 
