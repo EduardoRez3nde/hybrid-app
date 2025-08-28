@@ -6,6 +6,7 @@ import com.rezende.user_service.dto.RegisterDriverDTO;
 import com.rezende.user_service.dto.RegisterResponseDTO;
 import com.rezende.user_service.dto.RegisterUser;
 import com.rezende.user_service.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,12 +27,12 @@ public class UserController {
     }
 
     @PostMapping("/register/customer")
-    public ResponseEntity<RegisterResponseDTO> register(@RequestBody final RegisterCustomerDTO dto) {
+    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody final RegisterCustomerDTO dto) {
         return buildCreatedResponse(dto);
     }
 
     @PostMapping("/register/driver")
-    public ResponseEntity<RegisterResponseDTO> register(@RequestBody final RegisterDriverDTO dto) {
+    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody final RegisterDriverDTO dto) {
         return buildCreatedResponse(dto);
     }
 
@@ -44,5 +45,4 @@ public class UserController {
                 .toUri();
         return ResponseEntity.created(uri).body(response);
     }
-
 }

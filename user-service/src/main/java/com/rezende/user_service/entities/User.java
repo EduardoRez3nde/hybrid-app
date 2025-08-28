@@ -27,12 +27,13 @@ public class User {
     private UUID id;
 
     @NotBlank(message = "{name.not.blank}")
-    @Size(min = 2, message = "{name.too.short}")
+    @Size(min = 2, max = 100, message = "{name.invalid.length}")
     @Column(nullable = false)
     private String name;
 
     @NotBlank(message = "{email.not.blank}")
     @Email(message = "{email.not.valid}")
+    @Size(max = 255, message = "{email.too.long}")
     @Column(nullable = false, unique = true)
     private String email;
 
