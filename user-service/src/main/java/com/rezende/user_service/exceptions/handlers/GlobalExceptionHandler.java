@@ -17,6 +17,25 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ValidationError> handleValidationExceptions(
+            final MethodArgumentNotValidException e,
+            final HttpServletRequest request
+    ) {
+        final HttpStatus status = HttpStatus.BAD_REQUEST;
+        final ValidationError validationError = new ValidationError(
+                Instant.now(),
+                status.value(),
+                "Validation Failed",
+                "One or more fields are invalid",
+                request.getContextPath()
+        );
+        e.getBindingResult().getFieldErrors()
+                .forEach(error -> validationError.addError(error.getField(), error.getDefaultMessage()));
+
+        return ResponseEntity.status(status).body(validationError);
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<CustomError>handleEmailAlreadyExistsException(
             final EmailAlreadyExistsException e,
@@ -51,24 +70,5 @@ public class GlobalExceptionHandler {
                 .path(request.getContextPath())
                 .build();
         return ResponseEntity.status(status).body(error);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ValidationError> handleValidationExceptions(
-            final MethodArgumentNotValidException e,
-            final HttpServletRequest request
-    ) {
-        final HttpStatus status = HttpStatus.BAD_REQUEST;
-        final ValidationError validationError = new ValidationError(
-                Instant.now(),
-                status.value(),
-                "Validation Failed",
-                "One or more fields are invalid",
-                request.getContextPath()
-        );
-        e.getBindingResult().getFieldErrors()
-                .forEach(error -> validationError.addError(error.getField(), error.getDefaultMessage()));
-
-        return ResponseEntity.status(status).body(validationError);
     }
 }

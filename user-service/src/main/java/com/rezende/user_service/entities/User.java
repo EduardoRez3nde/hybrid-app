@@ -26,24 +26,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "{name.not.blank}")
-    @Size(min = 2, max = 100, message = "{name.invalid.length}")
     @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "{email.not.blank}")
-    @Email(message = "{email.not.valid}")
-    @Size(max = 255, message = "{email.too.long}")
     @Column(nullable = false, unique = true)
     private String email;
 
-    @NotBlank(message = "{password.too.short}")
-    @Size(min = 8, message = "{password.too.short}")
     @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @NotNull(message = "{role.not.null}")
     @Column(nullable = false)
     private RoleType roleType;
 
