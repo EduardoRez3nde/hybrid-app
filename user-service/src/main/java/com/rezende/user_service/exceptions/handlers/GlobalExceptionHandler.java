@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
                 status.value(),
                 "Validation Failed",
                 "One or more fields are invalid",
-                request.getContextPath()
+                request.getRequestURI()
         );
         e.getBindingResult().getFieldErrors()
                 .forEach(error -> validationError.addError(error.getField(), error.getDefaultMessage()));

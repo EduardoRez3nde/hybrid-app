@@ -1,7 +1,5 @@
 package com.rezende.user_service.exceptions;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +9,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@Builder
 public class ValidationError extends CustomError {
 
     private final List<FieldError> errors = new ArrayList<>();
