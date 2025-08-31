@@ -3,13 +3,10 @@ package com.rezende.user_service.controllers;
 
 import com.rezende.user_service.dto.*;
 import com.rezende.user_service.services.AuthService;
-import com.rezende.user_service.services.KeycloakClient;
+import com.rezende.user_service.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -18,26 +15,34 @@ import java.net.URI;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final AuthService userService;
+    private final AuthService authService;
+    private final UserService userService;
 
     public UserController(
-            final AuthService userService
+            final UserService userService, AuthService authService
     ) {
+        this.authService = authService;
         this.userService = userService;
     }
 
     @PostMapping("/register/customer")
-    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody final RegisterCustomerDTO dto) {
+    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody final RegisterCustomerDTO dto) {
         return buildCreatedResponse(dto);
     }
 
     @PostMapping("/register/driver")
-    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody final RegisterDriverDTO dto) {
+    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody final RegisterDriverDTO dto) {
         return buildCreatedResponse(dto);
     }
 
-    private ResponseEntity<RegisterResponseDTO> buildCreatedResponse(final RegisterUser dto) {
-        RegisterResponseDTO response = userService.register(dto);
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getMyProfile(@RequestHeader("X-User-ID") final String userId) {
+        final UserResponseDTO response = userService.findMe(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    private ResponseEntity<UserResponseDTO> buildCreatedResponse(final RegisterUser dto) {
+        UserResponseDTO response = authService.register(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -45,5 +50,4 @@ public class UserController {
                 .toUri();
         return ResponseEntity.created(uri).body(response);
     }
-
 }

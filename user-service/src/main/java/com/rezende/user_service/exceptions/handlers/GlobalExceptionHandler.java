@@ -71,4 +71,22 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.status(status).body(error);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CustomError> handleUserNotFoundException(
+            final Exception e,
+            final HttpServletRequest request
+    ) {
+        log.error("Unhandled exception: {}", e.getMessage(), e);
+
+        final HttpStatus status = HttpStatus.NOT_FOUND;
+        final CustomError error = CustomError.builder()
+                .timestamp(Instant.now())
+                .status(status.value())
+                .error("User not Found")
+                .message(e.getMessage())
+                .path(request.getContextPath())
+                .build();
+        return ResponseEntity.status(status).body(error);
+    }
 }

@@ -12,13 +12,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Getter
 @Service
-public class KeycloakClient {
+public class KeycloakClientService {
 
     private final WebClient webClient;
     private final String clientId;
     private final String clientSecret;
 
-    public KeycloakClient(
+    public KeycloakClientService(
             @Value("${spring.security.oauth2.client.provider.keycloak.issuer-uri}") final String baseUrl,
             @Value("${spring.security.oauth2.client.registration.keycloak-client.client-id}") final String clientId,
             @Value("${spring.security.oauth2.client.registration.keycloak-client.client-secret}") final String clientSecret,

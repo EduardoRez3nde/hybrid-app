@@ -1,7 +1,7 @@
 package com.rezende.user_service.services;
 
 import com.rezende.user_service.dto.RegisterCustomerDTO;
-import com.rezende.user_service.dto.RegisterResponseDTO;
+import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.entities.User;
 import com.rezende.user_service.enums.AccountStatus;
 import com.rezende.user_service.enums.RoleType;
@@ -64,7 +64,7 @@ public class UserServiceTests {
         when(userRepository.save(any(User.class)))
                 .thenReturn(savedUser);
 
-        final RegisterResponseDTO response = userService.register(registerUser);
+        final UserResponseDTO response = userService.register(registerUser);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals("3e56c042-b325-4eb4-a8cb-d197c16f28d2", response.id());
@@ -131,7 +131,7 @@ public class UserServiceTests {
                     return user;
                 });
 
-        final RegisterResponseDTO response = userService.register(registerUser);
+        final UserResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
         Assertions.assertNotNull(response);
@@ -164,7 +164,7 @@ public class UserServiceTests {
                     return user;
                 });
 
-        final RegisterResponseDTO response = userService.register(registerUser);
+        final UserResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
         Assertions.assertNotNull(response);
@@ -200,7 +200,7 @@ public class UserServiceTests {
                     return user;
                 });
 
-        final RegisterResponseDTO response = userService.register(registerUser);
+        final UserResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
         Assertions.assertNotNull(response);

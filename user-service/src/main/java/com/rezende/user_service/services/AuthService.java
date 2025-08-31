@@ -1,6 +1,6 @@
 package com.rezende.user_service.services;
 
-import com.rezende.user_service.dto.RegisterResponseDTO;
+import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.dto.RegisterUser;
 import com.rezende.user_service.entities.User;
 import com.rezende.user_service.enums.AccountStatus;
@@ -19,14 +19,14 @@ public class AuthService {
     public AuthService(
             final UserRepository userRepository,
             final PasswordEncoder passwordEncoder,
-            final KeycloakClient keycloakClient
+            final KeycloakClientService keycloakClient
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
-    public RegisterResponseDTO register(final RegisterUser dto) {
+    public UserResponseDTO register(final RegisterUser dto) {
 
         if (userRepository.findByEmail(dto.getEmail()).isPresent())
             throw new EmailAlreadyExistsException("There is already a user with this email.");
@@ -40,6 +40,6 @@ public class AuthService {
         );
         user = userRepository.save(user);
 
-        return RegisterResponseDTO.of(user);
+        return UserResponseDTO.of(user);
     }
 }

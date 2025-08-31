@@ -4,14 +4,14 @@ import com.rezende.user_service.entities.User;
 import com.rezende.user_service.enums.AccountStatus;
 import com.rezende.user_service.enums.RoleType;
 
-public record RegisterResponseDTO(
+public record UserResponseDTO(
         String id,
         String name,
         String email,
         RoleType roleType,
         AccountStatus accountStatus
 ) {
-    public static RegisterResponseDTO from(
+    public static UserResponseDTO from(
             final String id,
             final String name,
             final String email,
@@ -19,11 +19,11 @@ public record RegisterResponseDTO(
             AccountStatus accountStatus
 
     ) {
-        return new RegisterResponseDTO(id, name, email, roleType, accountStatus);
+        return new UserResponseDTO(id, name, email, roleType, accountStatus);
     }
 
-    public static RegisterResponseDTO of(final User user) {
-        return RegisterResponseDTO.from(
+    public static UserResponseDTO of(final User user) {
+        return UserResponseDTO.from(
                 String.valueOf(user.getId()),
                 user.getName(),
                 user.getEmail(),
