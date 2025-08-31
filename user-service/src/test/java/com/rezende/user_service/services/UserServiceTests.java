@@ -3,8 +3,8 @@ package com.rezende.user_service.services;
 import com.rezende.user_service.dto.RegisterCustomerDTO;
 import com.rezende.user_service.dto.RegisterResponseDTO;
 import com.rezende.user_service.entities.User;
-import com.rezende.user_service.entities.enums.AccountStatus;
-import com.rezende.user_service.entities.enums.RoleType;
+import com.rezende.user_service.enums.AccountStatus;
+import com.rezende.user_service.enums.RoleType;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.repositories.UserRepository;
 import org.junit.jupiter.api.Assertions;
@@ -34,7 +34,7 @@ public class UserServiceTests {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UserService userService;
+    private AuthService userService;
 
     @Test
     @DisplayName("Quando o email não existe, cria o usuário com sucesso")

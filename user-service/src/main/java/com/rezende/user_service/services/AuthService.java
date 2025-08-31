@@ -3,7 +3,7 @@ package com.rezende.user_service.services;
 import com.rezende.user_service.dto.RegisterResponseDTO;
 import com.rezende.user_service.dto.RegisterUser;
 import com.rezende.user_service.entities.User;
-import com.rezende.user_service.entities.enums.AccountStatus;
+import com.rezende.user_service.enums.AccountStatus;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,14 +11,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class UserService {
+public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(
+    public AuthService(
             final UserRepository userRepository,
-            final PasswordEncoder passwordEncoder
+            final PasswordEncoder passwordEncoder,
+            final KeycloakClient keycloakClient
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;

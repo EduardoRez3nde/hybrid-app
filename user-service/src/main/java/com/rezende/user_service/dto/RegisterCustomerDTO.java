@@ -1,6 +1,6 @@
 package com.rezende.user_service.dto;
 
-import com.rezende.user_service.entities.enums.RoleType;
+import com.rezende.user_service.enums.RoleType;
 import com.rezende.user_service.services.validation.UniqueEmailValid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

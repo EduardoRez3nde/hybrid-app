@@ -1,4 +1,4 @@
-package com.rezende.user_service.entities.enums;
+package com.rezende.user_service.enums;
 
 public enum RoleType {
 

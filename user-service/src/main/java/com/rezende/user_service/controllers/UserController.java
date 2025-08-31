@@ -1,11 +1,9 @@
 package com.rezende.user_service.controllers;
 
 
-import com.rezende.user_service.dto.RegisterCustomerDTO;
-import com.rezende.user_service.dto.RegisterDriverDTO;
-import com.rezende.user_service.dto.RegisterResponseDTO;
-import com.rezende.user_service.dto.RegisterUser;
-import com.rezende.user_service.services.UserService;
+import com.rezende.user_service.dto.*;
+import com.rezende.user_service.services.AuthService;
+import com.rezende.user_service.services.KeycloakClient;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,9 +18,11 @@ import java.net.URI;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserService userService;
+    private final AuthService userService;
 
-    public UserController(final UserService userService) {
+    public UserController(
+            final AuthService userService
+    ) {
         this.userService = userService;
     }
 
@@ -45,4 +45,5 @@ public class UserController {
                 .toUri();
         return ResponseEntity.created(uri).body(response);
     }
+
 }

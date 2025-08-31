@@ -1,8 +1,8 @@
 package com.rezende.user_service.dto;
 
 import com.rezende.user_service.entities.User;
-import com.rezende.user_service.entities.enums.AccountStatus;
-import com.rezende.user_service.entities.enums.RoleType;
+import com.rezende.user_service.enums.AccountStatus;
+import com.rezende.user_service.enums.RoleType;
 
 public record RegisterResponseDTO(
         String id,

@@ -7,6 +7,7 @@ services:
     networks:
       - hybrid-service-network
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - MANAGEMENT_HEALTH_DISCOVERY_ENABLED=false
       - MANAGEMENT_ENDPOINT_HEALTH_SHOWDETAILS=always
   discovery-server:
@@ -33,14 +34,12 @@ services:
       - hybrid-service-network
     depends_on:
       - config-server
-    extra_hosts:
-      - "localhost:172.17.0.1"
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
       - SERVER_PORT=9000
-      - spring.cloud.config.fail-fast=true
-      - spring.cloud.config.retry.max-attempts=20
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.3
     container_name: keycloak
@@ -59,8 +58,8 @@ services:
     container_name: user-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: user_service_db
     ports:
       - "5432:5432"
@@ -70,11 +69,15 @@ services:
       - pgdata:/var/lib/postgresql/data
   user-service:
     build: ./user-service
+    container_name: user-service
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - spring.cloud.config.fail-fast=true
-      - spring.cloud.config.retry.max-attempts=20
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
     networks:
       - hybrid-service-network
     depends_on:
