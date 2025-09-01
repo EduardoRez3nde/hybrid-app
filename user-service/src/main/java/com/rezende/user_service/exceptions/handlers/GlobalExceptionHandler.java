@@ -1,8 +1,6 @@
 package com.rezende.user_service.exceptions.handlers;
 
-import com.rezende.user_service.exceptions.CustomError;
-import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
-import com.rezende.user_service.exceptions.ValidationError;
+import com.rezende.user_service.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -72,7 +70,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(error);
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<CustomError> handleUserNotFoundException(
             final Exception e,
             final HttpServletRequest request
@@ -80,6 +78,24 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception: {}", e.getMessage(), e);
 
         final HttpStatus status = HttpStatus.NOT_FOUND;
+        final CustomError error = CustomError.builder()
+                .timestamp(Instant.now())
+                .status(status.value())
+                .error("User not Found")
+                .message(e.getMessage())
+                .path(request.getContextPath())
+                .build();
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(KeycloakUserCreationException.class)
+    public ResponseEntity<CustomError> handleKeycloakUserCreationException(
+            final Exception e,
+            final HttpServletRequest request
+    ) {
+        log.error("Unhandled exception: {}", e.getMessage(), e);
+
+        final HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         final CustomError error = CustomError.builder()
                 .timestamp(Instant.now())
                 .status(status.value())

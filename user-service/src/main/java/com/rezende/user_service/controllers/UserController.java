@@ -2,7 +2,6 @@ package com.rezende.user_service.controllers;
 
 
 import com.rezende.user_service.dto.*;
-import com.rezende.user_service.services.AuthService;
 import com.rezende.user_service.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +14,11 @@ import java.net.URI;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final AuthService authService;
     private final UserService userService;
 
     public UserController(
-            final UserService userService, AuthService authService
+            final UserService userService
     ) {
-        this.authService = authService;
         this.userService = userService;
     }
 
@@ -42,7 +39,7 @@ public class UserController {
     }
 
     private ResponseEntity<UserResponseDTO> buildCreatedResponse(final RegisterUser dto) {
-        UserResponseDTO response = authService.register(dto);
+        UserResponseDTO response = userService.register(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")

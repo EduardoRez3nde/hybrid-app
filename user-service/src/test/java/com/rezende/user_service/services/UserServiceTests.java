@@ -34,7 +34,7 @@ public class UserServiceTests {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private AuthService userService;
+    private UserService userService;
 
     @Test
     @DisplayName("Quando o email não existe, cria o usuário com sucesso")

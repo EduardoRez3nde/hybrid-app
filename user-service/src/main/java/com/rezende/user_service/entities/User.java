@@ -19,7 +19,6 @@ import java.util.UUID;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false)
@@ -40,12 +39,14 @@ public class User {
     private AccountStatus accountStatus;
 
     private User(
+            final UUID id,
             final String name,
             final String email,
             final String password,
             final RoleType roleType,
             final AccountStatus accountStatus
     ) {
+        this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
@@ -54,13 +55,13 @@ public class User {
     }
 
     public static User from(
+            final UUID id,
             final String name,
             final String email,
             final String password,
             final RoleType roleType,
             final AccountStatus accountStatus
     ) {
-        return new User(name, email, password, roleType, accountStatus);
+        return new User(id, name, email, password, roleType, accountStatus);
     }
-
 }
