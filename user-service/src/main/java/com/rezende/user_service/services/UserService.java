@@ -44,6 +44,7 @@ public class UserService {
             throw new EmailAlreadyExistsException("There is already a user with this email.");
 
         final String keycloakId = keycloakClient.createUserInKeycloak(dto);
+        keycloakClient.sendVerificationEmail(keycloakId);
 
         User user = User.from(
                 UUID.fromString(keycloakId),

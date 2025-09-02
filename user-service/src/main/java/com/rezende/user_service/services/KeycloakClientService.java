@@ -85,6 +85,15 @@ public class KeycloakClientService {
                 .block();
     }
 
+    public void sendVerificationEmail(final String userId) {
+        webClient.put()
+                .uri(this.adminApiBaseUrl + "/users/" + userId + "/send-verify-email")
+                .header("Authorization", "Bearer " + getAdminToken())
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+    }
+
     private String getAdminToken() {
         return webClient.post()
                 .uri(KeycloakEndpoint.TOKEN.getPath())
