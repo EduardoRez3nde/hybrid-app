@@ -1,2 +1,52 @@
+# -------------------------
+# IDEs
+# -------------------------
+.idea/
+*.iml
+.vscode/
+
+# -------------------------
+# Gradle / build
+# -------------------------
+.gradle/
+build/
+out/
+gradle/wrapper/dists/
+
+# -------------------------
+# Maven (se usar em algum microserviço)
+# -------------------------
+target/
+
+# -------------------------
+# Configurações sensíveis / ambiente
+# -------------------------
 .env
+docker-compose.override.yml
+docker-compose.*.env
+*.env.local
+
+# -------------------------
+# Logs / arquivos temporários
+# -------------------------
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Spring Boot
+# -------------------------
+/logs/
+*.pid
+
+# -------------------------
+# Test output
+# -------------------------
+/test-output/
+
+# -------------------------
+# Anotações e arquivos pessoais
+# -------------------------
 anotacoes.md
