@@ -20,9 +20,6 @@
       <module name="hybrid-service.payment-service" target="21" />
       <module name="hybrid-service.payment-service.main" target="21" />
       <module name="hybrid-service.payment-service.test" target="21" />
-      <module name="hybrid-service.taxi-service" target="21" />
-      <module name="hybrid-service.taxi-service.main" target="21" />
-      <module name="hybrid-service.taxi-service.test" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

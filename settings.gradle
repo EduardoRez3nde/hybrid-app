@@ -12,7 +12,7 @@ include(
         "discovery-server",
         "api-gateway",
         "user-service",
-//        "taxi-service",
+        "taxi-service",
 //        "delivery-service",
 //        "notification-service",
 //        "payment-service"
