@@ -1,17 +1,17 @@
 # -------------------------
 # IDEs
 # -------------------------
-.idea/
+.idea
 *.iml
 .vscode/
 
 # -------------------------
 # Gradle / build
 # -------------------------
-.gradle/
-build/
-out/
-gradle/wrapper/dists/
+.gradle
+build
+out
+gradle/wrapper/dists
 
 # -------------------------
 # Maven (se usar em algum microserviço)
