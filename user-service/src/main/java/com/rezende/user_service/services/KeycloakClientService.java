@@ -7,47 +7,44 @@ import com.rezende.user_service.dto.UserPayloadDTO;
 import com.rezende.user_service.enums.KeycloakEndpoint;
 import com.rezende.user_service.exceptions.KeycloakUserCreationException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 @Getter
 @Service
+@Slf4j
 public class KeycloakClientService {
 
     private final WebClient webClient;
     private final String clientId;
     private final String clientSecret;
-    private final String adminApiBaseUrl;
+    private final String realm;
+    private final KeycloakTokenService keycloakTokenService;
 
     public KeycloakClientService(
+            final WebClient webClient,
+            final KeycloakTokenService keycloakTokenService,
             @Value("${keycloak.admin.realm}") final String realm,
-            @Value("${keycloak.admin.server-url}") final String serverUrl,
-            @Value("${spring.security.oauth2.client.provider.keycloak.issuer-uri}") final String baseUrl,
             @Value("${spring.security.oauth2.client.registration.keycloak-client.client-id}") final String clientId,
-            @Value("${spring.security.oauth2.client.registration.keycloak-client.client-secret}") final String clientSecret,
-            final WebClient.Builder webClientBuilder
+            @Value("${spring.security.oauth2.client.registration.keycloak-client.client-secret}") final String clientSecret
     ) {
-        this.webClient = webClientBuilder
-                .baseUrl(baseUrl)
-                .build();
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.adminApiBaseUrl = UriComponentsBuilder
-                .fromUriString(serverUrl)
-                .pathSegment("admin", "realms", realm)
-                .toUriString();
+        this.webClient = webClient;
+        this.keycloakTokenService = keycloakTokenService;
+        this.realm = realm;
     }
 
     public LoginResponseDTO userLogin(final LoginRequestDTO dto) {
         return webClient.post()
-                .uri(KeycloakEndpoint.TOKEN.getPath())
+                .uri(uriBuilder -> uriBuilder
+                        .path(KeycloakEndpoint.GET_TOKEN.getPath())
+                        .build(realm))
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData("grant_type", "password")
                         .with("client_id", clientId)
@@ -62,49 +59,61 @@ public class KeycloakClientService {
 
     public String createUserInKeycloak(final RegisterUser user) {
 
-        final String adminToken = getAdminToken();
+        log.info("Attempting to create user in Keycloak for email: {}", user.getEmail());
+
+        final String adminToken = keycloakTokenService.getAdminToken();
         final UserPayloadDTO userPayload = UserPayloadDTO.of(user);
 
+        log.debug("User payload to be sent to Keycloak: {}", userPayload);
+
         return webClient.post()
-                .uri(adminApiBaseUrl + "/users")
+                .uri(uriBuilder -> uriBuilder
+                        .path(KeycloakEndpoint.CREATE_USER.getPath())
+                        .build(realm))
                 .header("Authorization", "Bearer " + adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(userPayload)
                 .exchangeToMono(response -> {
                     final String location = response.headers().asHttpHeaders().getFirst("Location");
 
-                    if (response.statusCode().is2xxSuccessful() && location != null)
-                        return Mono.just(location.substring(location.lastIndexOf("/") + 1));
-
+                    if (response.statusCode().is2xxSuccessful() && location != null) {
+                        final String newUserId = location.substring(location.lastIndexOf("/") + 1);
+                        log.info("User created successfully in Keycloak with ID: {}", newUserId);
+                        return Mono.just(newUserId);
+                    }
                     return response
                             .bodyToMono(String.class)
-                            .flatMap(errorBody -> Mono.error(
-                                    new KeycloakUserCreationException("Error creating user in Keycloak"))
-                            );
+                            .flatMap(errorBody -> {
+                                log.error("Error creating user in Keycloak. Status: {}, Response: {}",
+                                        response.statusCode().value(), errorBody);
+                                return Mono.error(new KeycloakUserCreationException("Error creating user in Keycloak. Check logs for details."));
+                            });
+                })
+                .doOnError(error -> {
+                    log.error("A network error occurred while trying to create user in Keycloak.", error);
                 })
                 .block();
     }
 
-    public void sendVerificationEmail(final String userId) {
-        webClient.put()
-                .uri(this.adminApiBaseUrl + "/users/" + userId + "/send-verify-email")
-                .header("Authorization", "Bearer " + getAdminToken())
+    public void deleteUserInKeycloak(final String userId) {
+        webClient.delete()
+                .uri(uriBuilder -> uriBuilder
+                        .path(KeycloakEndpoint.DELETE_USER.getPath())
+                        .build(realm, userId))
+                .header("Authorization", "Bearer " + keycloakTokenService.getAdminToken())
                 .retrieve()
                 .toBodilessEntity()
                 .block();
     }
 
-    private String getAdminToken() {
-        return webClient.post()
-                .uri(KeycloakEndpoint.TOKEN.getPath())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData("grant_type", "client_credentials")
-                        .with("client_id", clientId)
-                        .with("client_secret", clientSecret)
-                )
+    public void sendVerificationEmail(final String userId) {
+        webClient.put()
+                .uri(uriBuilder -> uriBuilder
+                        .path(KeycloakEndpoint.SEND_VERIFY_EMAIL.getPath())
+                        .build(realm, userId))
+                .header("Authorization", "Bearer " + keycloakTokenService.getAdminToken())
                 .retrieve()
-                .bodyToMono(Map.class)
-                .map(response -> (String) response.get("access_token"))
+                .toBodilessEntity()
                 .block();
     }
 }

@@ -49,11 +49,11 @@ services:
       KC_DB_URL_DATABASE: keycloak_db
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: senha123
-      KC_HOSTNAME: localhost
+      KC_HOSTNAME: keycloak
       KC_HOSTNAME_STRICT: true
       KC_HTTP_RELATIVE_PATH: /auth
-      KC_ADMIN: admin
-      KC_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
       - "8080:8080"
     depends_on:
@@ -76,7 +76,7 @@ services:
   user-db:
     image: postgres:16
     container_name: user-db
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -86,7 +86,7 @@ services:
     networks:
       - hybrid-service-network
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql/data
   user-service:
     build: ./user-service
     container_name: user-service
@@ -104,10 +104,23 @@ services:
       - user-db
       - config-server
       - discovery-server
+  redis:
+    image: redis:8.2
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis-data:/data
+    networks:
+      - hybrid-service-network
 
 volumes:
-  pgdata:
+  pg-data:
   keycloak-db-data:
+  redis-data:
+  keycloak-data:
 networks:
   hybrid-service-network:
     driver: bridge

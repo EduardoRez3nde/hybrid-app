@@ -105,4 +105,40 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.status(status).body(error);
     }
+
+    @ExceptionHandler(KeycloakTokenException.class)
+    public ResponseEntity<CustomError> handleKeycloakTokenException(
+            final KeycloakTokenException e,
+            final HttpServletRequest request
+    ) {
+        final HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        final CustomError error = CustomError.builder()
+                .timestamp(Instant.now())
+                .status(status.value())
+                .error("Keycloak Token Error")
+                .message(e.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(UserRegistrationException.class)
+    public ResponseEntity<CustomError> handleUserRegistrationException(
+            final UserRegistrationException e,
+            final HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        final CustomError error = CustomError.builder()
+                .timestamp(Instant.now())
+                .status(status.value())
+                .error("User registration failed")
+                .message(e.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(status).body(error);
+    }
 }

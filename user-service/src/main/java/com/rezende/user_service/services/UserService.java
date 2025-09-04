@@ -6,6 +6,7 @@ import com.rezende.user_service.entities.User;
 import com.rezende.user_service.enums.AccountStatus;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.exceptions.UserNotFoundException;
+import com.rezende.user_service.exceptions.UserRegistrationException;
 import com.rezende.user_service.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,18 +45,23 @@ public class UserService {
             throw new EmailAlreadyExistsException("There is already a user with this email.");
 
         final String keycloakId = keycloakClient.createUserInKeycloak(dto);
-        keycloakClient.sendVerificationEmail(keycloakId);
 
-        User user = User.from(
-                UUID.fromString(keycloakId),
-                dto.getName(),
-                dto.getEmail(),
-                passwordEncoder.encode(dto.getPassword()),
-                dto.getRoleType(),
-                AccountStatus.ACTIVE
-        );
-        user = userRepository.save(user);
+        try {
+            User user = User.from(
+                    UUID.fromString(keycloakId),
+                    dto.getName(),
+                    dto.getEmail(),
+                    passwordEncoder.encode(dto.getPassword()),
+                    dto.getRoleType(),
+                    AccountStatus.ACTIVE
+            );
+            user = userRepository.save(user);
+            keycloakClient.sendVerificationEmail(keycloakId);
 
-        return UserResponseDTO.of(user);
+            return UserResponseDTO.of(user);
+        } catch (Exception e) {
+            keycloakClient.deleteUserInKeycloak(keycloakId);
+            throw new UserRegistrationException("Could not save user locally. Reverting Keycloak creation.");
+        }
     }
 }

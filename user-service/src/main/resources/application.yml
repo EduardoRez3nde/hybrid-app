@@ -3,4 +3,6 @@ spring:
     name: user-service
 logging:
   level:
-    org.springframework.security: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
+    reactor.netty.http.client: DEBUG
+    com.rezende.user_service.services: DEBUG
