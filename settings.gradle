@@ -13,6 +13,7 @@ include(
         "api-gateway",
         "user-service",
         "taxi-service",
+        "vehicle-service",
 //        "delivery-service",
 //        "notification-service",
 //        "payment-service"
