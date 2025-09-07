@@ -4,6 +4,7 @@ import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.dto.RegisterUser;
 import com.rezende.user_service.entities.User;
 import com.rezende.user_service.enums.AccountStatus;
+import com.rezende.user_service.events.UserRegisterEvent;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.exceptions.UserNotFoundException;
 import com.rezende.user_service.exceptions.UserRegistrationException;
@@ -20,15 +21,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final KeycloakClientService keycloakClient;
+    private final UserEventProducer userEventProducer;
 
     public UserService(
             final UserRepository userRepository,
             final PasswordEncoder passwordEncoder,
-            final KeycloakClientService keycloakClient
+            final KeycloakClientService keycloakClient,
+            final UserEventProducer userEventProducer
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.keycloakClient = keycloakClient;
+        this.userEventProducer = userEventProducer;
     }
 
     @Transactional(readOnly = true)
@@ -47,7 +51,7 @@ public class UserService {
         final String keycloakId = keycloakClient.createUserInKeycloak(dto);
 
         try {
-            User user = User.from(
+            final User user = User.from(
                     UUID.fromString(keycloakId),
                     dto.getName(),
                     dto.getEmail(),
@@ -55,10 +59,12 @@ public class UserService {
                     dto.getRoleType(),
                     AccountStatus.ACTIVE
             );
-            user = userRepository.save(user);
+            final User userSave = userRepository.save(user);
             keycloakClient.sendVerificationEmail(keycloakId);
+            userEventProducer.sendUserCreatedEvent(UserRegisterEvent.of(userSave));
 
-            return UserResponseDTO.of(user);
+            return UserResponseDTO.of(userSave);
+
         } catch (Exception e) {
             keycloakClient.deleteUserInKeycloak(keycloakId);
             throw new UserRegistrationException("Could not save user locally. Reverting Keycloak creation.");

@@ -2,14 +2,15 @@ package com.rezende.driver_service.entities;
 
 import com.rezende.driver_service.enums.ApprovalStatus;
 import com.rezende.driver_service.enums.OperationalStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.rezende.driver_service.events.UserRegisterEvent;
+import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.UUID;
+import java.time.Instant;
 
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = "userId")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -20,8 +21,27 @@ import java.util.UUID;
 public class DriverProfile {
 
     @Id
-    private UUID id;
+    @Column(name = "user_id", nullable = false)
+    private String userId;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = true, unique = true)
     private String cnhNumber;
+
+    @Enumerated(EnumType.STRING)
     private ApprovalStatus approvalStatus;
+
+    @Enumerated(EnumType.STRING)
     private OperationalStatus operationalStatus;
+
+    @CreationTimestamp
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    private Instant updatedAt;
 }

@@ -9,7 +9,7 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicConfig {
 
-    @Value("${app.kafka.topics.user-events}")
+    @Value("${spring.kafka.topics.user-events}")
     private String userEventsTopicName;
 
     @Bean

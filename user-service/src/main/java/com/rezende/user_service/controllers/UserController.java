@@ -2,6 +2,8 @@ package com.rezende.user_service.controllers;
 
 
 import com.rezende.user_service.dto.*;
+import com.rezende.user_service.events.UserRegisterEvent;
+import com.rezende.user_service.services.UserEventProducer;
 import com.rezende.user_service.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +19,8 @@ public class UserController {
     private final UserService userService;
 
     public UserController(
-            final UserService userService
+            final UserService userService,
+            final UserEventProducer userEventProducer
     ) {
         this.userService = userService;
     }

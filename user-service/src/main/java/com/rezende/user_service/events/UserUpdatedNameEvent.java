@@ -6,4 +6,4 @@ public record UserUpdatedNameEvent(
         String userId,
         String newName,
         Instant eventTimestamp
-) { }
+) implements DomainEvent { }
