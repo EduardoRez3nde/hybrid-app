@@ -1,6 +1,6 @@
 package com.rezende.driver_service.consumer;
 
-import com.rezende.driver_service.DriverService;
+import com.rezende.driver_service.services.DriverService;
 import com.rezende.driver_service.events.UserRegisterEvent;
 import com.rezende.driver_service.exceptions.UserEventProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ public class UserEventConsumer {
             backoff = @Backoff(delay = 1000, multiplier = 2.0),
             dltTopicSuffix = ".DLT")
     @KafkaListener(
-            topics = "${spring.kafka.topics.user-events}",
+            topics = "${app.kafka.topics.user-events}",
             groupId = "${spring.kafka.consumer.group-id}")
     public void handlerUserCreation(@Payload final UserRegisterEvent event, final Acknowledgment ack) {
 

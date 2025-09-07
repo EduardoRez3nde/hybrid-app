@@ -19,7 +19,7 @@ public class UserEventProducer {
     private final String topic;
 
     public UserEventProducer(
-            @Value("${spring.kafka.topics.user-events}") final String topic,
+            @Value("${app.kafka.topics.user-events}") final String topic,
             final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
         this.topic = topic;

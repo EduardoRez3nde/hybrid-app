@@ -12,4 +12,10 @@ public record UserRegisterEvent(
         RoleType roleType,
         AccountStatus accountStatus,
         Instant eventTimestamp
-) { }
+) implements DomainEvent {
+
+    @Override
+    public Instant occurredAt() {
+        return eventTimestamp;
+    }
+}
