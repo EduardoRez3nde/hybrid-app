@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @EqualsAndHashCode(of = "userId")
 @AllArgsConstructor
@@ -22,7 +23,7 @@ public class DriverProfile {
 
     @Id
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    private UUID userId;
 
     @Column(nullable = false)
     private String name;
@@ -30,7 +31,7 @@ public class DriverProfile {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = true, unique = true)
+    @Column(unique = true)
     private String cnhNumber;
 
     @Enumerated(EnumType.STRING)
