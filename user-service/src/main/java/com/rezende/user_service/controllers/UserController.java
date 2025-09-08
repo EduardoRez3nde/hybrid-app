@@ -42,8 +42,8 @@ public class UserController {
     }
 
     private ResponseEntity<UserResponseDTO> buildCreatedResponse(final RegisterUser dto) {
-        UserResponseDTO response = userService.register(dto);
-        URI uri = ServletUriComponentsBuilder
+        final UserResponseDTO response = userService.register(dto);
+        final URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(response.id())
