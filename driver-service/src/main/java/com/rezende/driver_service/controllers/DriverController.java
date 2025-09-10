@@ -1,5 +1,6 @@
 package com.rezende.driver_service.controllers;
 
+import com.rezende.driver_service.dto.AccountStatusRequestDTO;
 import com.rezende.driver_service.dto.DriverProfileResponse;
 import com.rezende.driver_service.dto.OnboardDriverRequestDTO;
 import com.rezende.driver_service.services.DriverService;
@@ -10,7 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/drivers")
+@RequestMapping("/drivers")
 public class DriverController {
 
     private final DriverService driverService;
@@ -22,7 +23,7 @@ public class DriverController {
     @PostMapping("/onboard")
     public ResponseEntity<DriverProfileResponse> submitOnboarding(
             @RequestHeader("X-User-ID") final String userId,
-            final OnboardDriverRequestDTO dto
+            @RequestBody final OnboardDriverRequestDTO dto
     ) {
         final DriverProfileResponse response = driverService.submitOnboarding(userId, dto);
 
@@ -41,8 +42,11 @@ public class DriverController {
     }
 
     @PutMapping("/me/status")
-    public ResponseEntity<DriverProfileResponse> approveDriver(@RequestHeader("X-User-ID") final String userId) {
-        final DriverProfileResponse response = driverService.approveDriver(userId);
+    public ResponseEntity<DriverProfileResponse> updateOperationalStatus(
+            @RequestHeader("X-User-ID") final String userId,
+            @RequestBody final AccountStatusRequestDTO dto
+    ) {
+        final DriverProfileResponse response = driverService.changeStatus(userId, dto);
         return ResponseEntity.ok(response);
     }
 }

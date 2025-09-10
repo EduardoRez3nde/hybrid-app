@@ -189,7 +189,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USERNAME_DRIVER_SERVICE}
-      POSTGRES_PASSWORD: ${POSTGRES_DRIVER_VEHICLE_SERVICE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_DRIVER_SERVICE}
       POSTGRES_DB: driver_service_db
     ports:
       - "5435:5432"
@@ -230,7 +230,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_CLUSTER_ID: 227272be-184e-4b9c-a4d9-8f6fa03e5367
+      CLUSTER_ID: 227272be-184e-4b9c-a4d9-8f6fa03e5367
     healthcheck:
       test: [ "CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--list" ]
       interval: 30s
@@ -243,7 +243,7 @@ services:
     container_name: kafdrop
     restart: unless-stopped
     ports:
-      - "9000:9000"
+      - "9080:9080"
     environment:
       KAFKA_BROKERCONNECT: "kafka:9092"
     depends_on:
@@ -258,6 +258,7 @@ volumes:
   redis-data:
   keycloak-data:
   pg-data-vehicle-service:
+  pg-data-driver-service:
 networks:
   hybrid-service-network:
     driver: bridge

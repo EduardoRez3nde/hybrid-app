@@ -1,11 +1,11 @@
 package com.rezende.user_service.services;
 
-import com.rezende.user_service.dto.LoginRequestDTO;
-import com.rezende.user_service.dto.LoginResponseDTO;
-import com.rezende.user_service.dto.RegisterUser;
-import com.rezende.user_service.dto.UserPayloadDTO;
+import com.rezende.user_service.dto.*;
 import com.rezende.user_service.enums.KeycloakEndpoint;
+import com.rezende.user_service.enums.RoleType;
+import com.rezende.user_service.exceptions.KeycloakRoleAssignmentException;
 import com.rezende.user_service.exceptions.KeycloakUserCreationException;
+import com.rezende.user_service.exceptions.RoleNotFoundException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Getter
 @Service
@@ -115,5 +118,41 @@ public class KeycloakClientService {
                 .retrieve()
                 .toBodilessEntity()
                 .block();
+    }
+
+    public void assignRealmRoleToUser(final String userId, final RoleType role) {
+
+        final String adminToken = keycloakTokenService.getAdminToken();
+        log.debug("A obter a representação da role '{}' do Keycloak...", role);
+
+        try {
+            final KeycloakRoleDTO roleToAssign = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(KeycloakEndpoint.GET_REALM_ROLE_BY_NAME.getPath())
+                            .build(realm, role.toString()))
+                    .headers(h -> h.setBearerAuth(adminToken))
+                    .retrieve()
+                    .bodyToMono(KeycloakRoleDTO.class)
+                    .block();
+
+            if (roleToAssign == null)
+                throw new RoleNotFoundException("The role %s was not found in the Keycloak realm.", role);
+
+            log.debug("A atribuir a role '{}' (ID: {}) ao utilizador {}", role, roleToAssign.id(), userId);
+
+            webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(KeycloakEndpoint.ASSIGN_REALM_ROLE_TO_USER.getPath())
+                            .build(realm, userId))
+                    .headers(h -> h.setBearerAuth(adminToken))
+                    .bodyValue(List.of(roleToAssign))
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            log.info("Role '{}' atribuída com sucesso ao utilizador {}", role, userId);
+        } catch (WebClientResponseException e) {
+            log.error("Falha ao atribuir a role '{}' ao utilizador {}: {} - {}", role, userId, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new KeycloakRoleAssignmentException("Keycloak API failed to assign role", e);
+        }
     }
 }

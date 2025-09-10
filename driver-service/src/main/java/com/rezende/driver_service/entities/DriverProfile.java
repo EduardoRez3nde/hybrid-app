@@ -2,7 +2,6 @@ package com.rezende.driver_service.entities;
 
 import com.rezende.driver_service.enums.ApprovalStatus;
 import com.rezende.driver_service.enums.OperationalStatus;
-import com.rezende.driver_service.events.UserRegisterEvent;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

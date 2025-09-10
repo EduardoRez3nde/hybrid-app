@@ -40,6 +40,7 @@ public class UserServiceTests {
     @DisplayName("Quando o email não existe, cria o usuário com sucesso")
     void shouldRegisterNewUserSuccessfully() {
 
+        final UUID id = UUID.randomUUID();
         final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
@@ -47,10 +48,11 @@ public class UserServiceTests {
         );
 
         final User savedUser = User.from(
+                id,
                 "Fulano",
                 "fulano@gmail.com",
                 "encoded-123456",
-                RoleType.CUSTOMER,
+                RoleType.ROLE_CUSTOMER,
                 AccountStatus.ACTIVE
         );
         savedUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
@@ -70,7 +72,7 @@ public class UserServiceTests {
         Assertions.assertEquals("3e56c042-b325-4eb4-a8cb-d197c16f28d2", response.id());
         Assertions.assertEquals(registerUser.name(), response.name());
         Assertions.assertEquals(registerUser.email(), response.email());
-        Assertions.assertEquals(RoleType.CUSTOMER, response.roleType());
+        Assertions.assertEquals(RoleType.ROLE_CUSTOMER, response.roleType());
 
         verify(userRepository).findByEmail(registerUser.email());
         verify(passwordEncoder).encode(registerUser.password());
@@ -80,7 +82,7 @@ public class UserServiceTests {
     @Test
     @DisplayName("Quando o email já existe, lança EmailAlreadyExistsException")
     void shouldThrowExceptionWhenEmailAlreadyExists() {
-
+        final UUID id = UUID.randomUUID();
         final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
                 "Fulano",
                 "fulano@gmail.com",
@@ -88,10 +90,11 @@ public class UserServiceTests {
         );
 
         final User existingUser = User.from(
+                id,
                 "Fulano",
                 "fulano@gmail.com",
                 "encoded-123456",
-                RoleType.CUSTOMER,
+                RoleType.ROLE_CUSTOMER,
                 AccountStatus.ACTIVE
         );
         existingUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
@@ -168,8 +171,8 @@ public class UserServiceTests {
         final User saved = userCaptor.getValue();
 
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(RoleType.CUSTOMER, response.roleType());
-        Assertions.assertEquals(RoleType.CUSTOMER, saved.getRoleType());
+        Assertions.assertEquals(RoleType.ROLE_CUSTOMER, response.roleType());
+        Assertions.assertEquals(RoleType.ROLE_CUSTOMER, saved.getRoleType());
 
         verify(userRepository).findByEmail(registerUser.email());
         verify(userRepository, times(1)).save(any(User.class));

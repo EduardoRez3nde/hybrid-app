@@ -1,12 +1,9 @@
 package com.rezende.driver_service.services;
 
-import com.rezende.driver_service.dto.DriverProfileResponse;
-import com.rezende.driver_service.dto.OnboardDriverRequestDTO;
+import com.rezende.driver_service.dto.*;
 import com.rezende.driver_service.entities.DriverProfile;
 import com.rezende.driver_service.enums.ApprovalStatus;
-import com.rezende.driver_service.events.DriverApprovedEvent;
-import com.rezende.driver_service.events.DriverOnboardingSubmittedEvent;
-import com.rezende.driver_service.events.UserRegisterEvent;
+import com.rezende.driver_service.events.*;
 import com.rezende.driver_service.exceptions.DriverNotPendingVerificationException;
 import com.rezende.driver_service.exceptions.UserEventProcessingException;
 import com.rezende.driver_service.exceptions.DriverNotFoundException;
@@ -34,7 +31,7 @@ public class DriverService {
     }
 
     @Transactional
-    public void processNewUserEvent(final UserRegisterEvent event) {
+    public void processNewUserEvent(final UserRegisterEventDTO event) {
 
         if (driverRepository.existsById(UUID.fromString(event.userId()))) return;
 
@@ -69,7 +66,22 @@ public class DriverService {
     }
 
     @Transactional
-    public DriverProfileResponse approveDriver(final String userId) {
+    public DriverProfileResponse changeStatus(final String userId, final AccountStatusRequestDTO dto) {
+
+        final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
+
+        driver.setOperationalStatus(dto.status());
+
+        final DriverProfile driverSave = driverRepository.save(driver);
+
+        driverEventProducer.sendOperationalStatusChanged(DriverOperationalStatusChangedEvent.of(driverSave));
+
+        return DriverProfileResponse.of(driverSave);
+    }
+
+    @Transactional
+    public DriverProfileResponse updateApprovalStatus(final String userId, final UpdateApprovalStatusRequestDTO dto) {
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
@@ -77,11 +89,16 @@ public class DriverService {
         if (driver.getApprovalStatus() != ApprovalStatus.PENDING_APPROVAL)
             throw new DriverNotPendingVerificationException("This driver is not pending verification.");
 
-        driver.setApprovalStatus(ApprovalStatus.APPROVED);
+        driver.setApprovalStatus(dto.newStatus());
+
+        // TODO: adicionar a razão no banco
 
         final DriverProfile driverSave = driverRepository.save(driver);
 
-        driverEventProducer.sendDriverApprovedEvent(DriverApprovedEvent.of(driverSave));
+        if (driver.getApprovalStatus() == ApprovalStatus.APPROVED)
+            driverEventProducer.sendDriverApprovedEvent(DriverApprovedEvent.of(driverSave));
+        else
+            driverEventProducer.sendDriverRejectedEvent(DriverRejectedEvent.of(driverSave));
 
         return DriverProfileResponse.of(driverSave);
     }

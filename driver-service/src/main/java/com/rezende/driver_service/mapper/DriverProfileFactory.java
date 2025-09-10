@@ -3,13 +3,13 @@ package com.rezende.driver_service.mapper;
 import com.rezende.driver_service.entities.DriverProfile;
 import com.rezende.driver_service.enums.ApprovalStatus;
 import com.rezende.driver_service.enums.OperationalStatus;
-import com.rezende.driver_service.events.UserRegisterEvent;
+import com.rezende.driver_service.dto.UserRegisterEventDTO;
 
 import java.util.UUID;
 
 public class DriverProfileFactory {
 
-    public static DriverProfile fromUserCreationEvent(final UserRegisterEvent event) {
+    public static DriverProfile fromUserCreationEvent(final UserRegisterEventDTO event) {
         return DriverProfile.builder()
                 .userId(UUID.fromString(event.userId()))
                 .name(event.name())

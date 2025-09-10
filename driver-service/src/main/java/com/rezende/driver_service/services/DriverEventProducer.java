@@ -1,8 +1,6 @@
 package com.rezende.driver_service.services;
 
-import com.rezende.driver_service.events.DomainEvent;
-import com.rezende.driver_service.events.DriverApprovedEvent;
-import com.rezende.driver_service.events.DriverOnboardingSubmittedEvent;
+import com.rezende.driver_service.events.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,25 +15,33 @@ import java.util.concurrent.CompletableFuture;
 public class DriverEventProducer {
 
     private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
-    private final String onboardingTopic;
-    private final String approvedTopic;
+    private final String driverOperationalStatus;
+    private final String driverLifecycle;
 
     public DriverEventProducer(
-            @Value("${app.kafka.topics.driver-onboarding}") final String onboardingTopic,
-            @Value("${app.kafka.topics.driver-approved}") final String approvedTopic,
+            @Value("${app.kafka.topics.driver-operational-status}") final String driverOperationalStatus,
+            @Value("${app.kafka.topics.driver-lifecycle}") final String driverLifecycle,
             final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
-        this.onboardingTopic = onboardingTopic;
         this.kafkaTemplate = kafkaTemplate;
-        this.approvedTopic = approvedTopic;
+        this.driverLifecycle = driverLifecycle;
+        this.driverOperationalStatus = driverOperationalStatus;
     }
 
     public void sendDriverOnboardingSubmittedEvent(final DriverOnboardingSubmittedEvent event) {
-        sendEvent(event, onboardingTopic);
+        sendEvent(event, driverLifecycle);
     }
 
     public void sendDriverApprovedEvent(final DriverApprovedEvent event) {
-        sendEvent(event, approvedTopic);
+        sendEvent(event, driverLifecycle);
+    }
+
+    public void sendDriverRejectedEvent(final DriverRejectedEvent event) {
+        sendEvent(event, driverLifecycle);
+    }
+
+    public void sendOperationalStatusChanged(final DriverOperationalStatusChangedEvent event) {
+        sendEvent(event, driverOperationalStatus);
     }
 
     private void sendEvent(final DomainEvent event, final String topic) {

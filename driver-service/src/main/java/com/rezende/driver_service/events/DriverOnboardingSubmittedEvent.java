@@ -10,7 +10,7 @@ public record DriverOnboardingSubmittedEvent(
         Instant submittedAt
 ) implements DomainEvent {
     public static DriverOnboardingSubmittedEvent of(final DriverProfile driver) {
-        return new DriverOnboardingSubmittedEvent(String.valueOf(driver.getUserId()), driver.getCnhNumber(), driver.getCreatedAt());
+        return new DriverOnboardingSubmittedEvent(String.valueOf(driver.getUserId()), driver.getCnhNumber(), Instant.now());
     }
 
     @Override

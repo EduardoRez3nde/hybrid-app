@@ -1,7 +1,7 @@
 package com.rezende.driver_service.consumer;
 
 import com.rezende.driver_service.services.DriverService;
-import com.rezende.driver_service.events.UserRegisterEvent;
+import com.rezende.driver_service.dto.UserRegisterEventDTO;
 import com.rezende.driver_service.exceptions.UserEventProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.DltHandler;
@@ -29,7 +29,7 @@ public class UserEventConsumer {
     @KafkaListener(
             topics = "${app.kafka.topics.user-events}",
             groupId = "${spring.kafka.consumer.group-id}")
-    public void handlerUserCreation(@Payload final UserRegisterEvent event, final Acknowledgment ack) {
+    public void handlerUserCreation(@Payload final UserRegisterEventDTO event, final Acknowledgment ack) {
 
         log.info("Evento UserCreatedEvent recebido para o userId: {}", event.userId());
 
@@ -44,7 +44,7 @@ public class UserEventConsumer {
     }
 
     @DltHandler
-    public void handleDlt(final UserRegisterEvent event) {
+    public void handleDlt(final UserRegisterEventDTO event) {
         log.error("[DLT] Mensagem recebida na Dead Letter Topic. Evento: {}", event);
     }
 }

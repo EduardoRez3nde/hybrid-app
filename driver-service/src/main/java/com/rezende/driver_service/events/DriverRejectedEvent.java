@@ -4,13 +4,13 @@ import com.rezende.driver_service.entities.DriverProfile;
 
 import java.time.Instant;
 
-public record DriverApprovedEvent(
+public record DriverRejectedEvent(
         String userId,
         Instant occurredAt
 ) implements DomainEvent{
 
-    public static DriverApprovedEvent of(final DriverProfile driver) {
-        return new DriverApprovedEvent(String.valueOf(driver.getUserId()), Instant.now());
+    public static DriverRejectedEvent of(final DriverProfile driver) {
+        return new DriverRejectedEvent(String.valueOf(driver.getUserId()), Instant.now());
     }
 
     @Override

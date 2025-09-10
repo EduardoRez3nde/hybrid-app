@@ -51,6 +51,8 @@ public class UserService {
         final String keycloakId = keycloakClient.createUserInKeycloak(dto);
 
         try {
+            keycloakClient.assignRealmRoleToUser(keycloakId, dto.getRoleType());
+
             final User user = User.from(
                     UUID.fromString(keycloakId),
                     dto.getName(),
