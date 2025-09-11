@@ -7,7 +7,6 @@ import com.rezende.user_service.enums.AccountStatus;
 import com.rezende.user_service.enums.RoleType;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.repositories.UserRepository;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +20,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -35,6 +36,31 @@ public class UserServiceTests {
 
     @InjectMocks
     private UserService userService;
+
+    @Test
+    @DisplayName("Deve retornar o DTO do utilizador quando o ID existe")
+    void findMeShouldReturnUserDTOWhenUserExists() {
+
+        final String userIdString = "a4e1a4d8-1c7b-4b6f-8a2d-9e0c7b1b3a1d";
+        final UUID userId = UUID.fromString(userIdString);
+        final User mockUser = User.from(
+                userId,
+                "Utilizador Encontrado",
+                "encontrado@email.com",
+                "senha-codificada",
+                RoleType.CUSTOMER,
+                AccountStatus.ACTIVE
+        );
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        final UserResponseDTO result = userService.findMe(userIdString);
+
+        assertNotNull(result);
+        assertEquals(userIdString, result.id());
+        assertEquals("Utilizador Encontrado", result.name());
+        assertEquals("encontrado@email.com", result.email());
+
+        verify(userRepository, times(1)).findById(userId);
+    }
 
     @Test
     @DisplayName("Quando o email não existe, cria o usuário com sucesso")
@@ -52,7 +78,7 @@ public class UserServiceTests {
                 "Fulano",
                 "fulano@gmail.com",
                 "encoded-123456",
-                RoleType.ROLE_CUSTOMER,
+                RoleType.CUSTOMER,
                 AccountStatus.ACTIVE
         );
         savedUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
@@ -68,11 +94,11 @@ public class UserServiceTests {
 
         final UserResponseDTO response = userService.register(registerUser);
 
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals("3e56c042-b325-4eb4-a8cb-d197c16f28d2", response.id());
-        Assertions.assertEquals(registerUser.name(), response.name());
-        Assertions.assertEquals(registerUser.email(), response.email());
-        Assertions.assertEquals(RoleType.ROLE_CUSTOMER, response.roleType());
+        assertNotNull(response);
+        assertEquals("3e56c042-b325-4eb4-a8cb-d197c16f28d2", response.id());
+        assertEquals(registerUser.name(), response.name());
+        assertEquals(registerUser.email(), response.email());
+        assertEquals(RoleType.CUSTOMER, response.roleType());
 
         verify(userRepository).findByEmail(registerUser.email());
         verify(passwordEncoder).encode(registerUser.password());
@@ -94,7 +120,7 @@ public class UserServiceTests {
                 "Fulano",
                 "fulano@gmail.com",
                 "encoded-123456",
-                RoleType.ROLE_CUSTOMER,
+                RoleType.CUSTOMER,
                 AccountStatus.ACTIVE
         );
         existingUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
@@ -137,8 +163,8 @@ public class UserServiceTests {
         final UserResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals("encoded-123456", saved.getPassword());
+        assertNotNull(response);
+        assertEquals("encoded-123456", saved.getPassword());
 
         verify(passwordEncoder).encode("123456");
     }
@@ -170,9 +196,9 @@ public class UserServiceTests {
         final UserResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals(RoleType.ROLE_CUSTOMER, response.roleType());
-        Assertions.assertEquals(RoleType.ROLE_CUSTOMER, saved.getRoleType());
+        assertNotNull(response);
+        assertEquals(RoleType.CUSTOMER, response.roleType());
+        assertEquals(RoleType.CUSTOMER, saved.getRoleType());
 
         verify(userRepository).findByEmail(registerUser.email());
         verify(userRepository, times(1)).save(any(User.class));
@@ -206,9 +232,9 @@ public class UserServiceTests {
         final UserResponseDTO response = userService.register(registerUser);
         final User saved = userCaptor.getValue();
 
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals(AccountStatus.ACTIVE, response.accountStatus());
-        Assertions.assertEquals(AccountStatus.ACTIVE, saved.getAccountStatus());
+        assertNotNull(response);
+        assertEquals(AccountStatus.ACTIVE, response.accountStatus());
+        assertEquals(AccountStatus.ACTIVE, saved.getAccountStatus());
 
         verify(userRepository).findByEmail(registerUser.email());
         verify(userRepository, times(1)).save(any(User.class));
