@@ -28,6 +28,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.cloud:spring-cloud-starter-config'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	implementation 'org.springframework.kafka:spring-kafka:3.3.9'
+	implementation("org.hibernate.orm:hibernate-spatial")
 
 	runtimeOnly 'org.postgresql:postgresql'
 
