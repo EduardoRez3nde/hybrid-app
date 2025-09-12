@@ -3,10 +3,11 @@ package com.rezende.taxi_service.event;
 import com.rezende.taxi_service.entities.Location;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record RideRequestedEvent(
-        String rideId,
-        String passengerId,
+        UUID rideId,
+        UUID passengerId,
         Location origin,
         Location destination,
         Instant eventTimestamp
@@ -14,7 +15,7 @@ public record RideRequestedEvent(
 
     @Override
     public String getAggregateId() {
-        return this.rideId;
+        return this.rideId.toString();
     }
 
     @Override
