@@ -1,6 +1,6 @@
 package com.rezende.driver_service.controllers;
 
-import com.rezende.driver_service.dto.DriverProfileResponse;
+import com.rezende.driver_service.dto.DriverProfileResponseDTO;
 import com.rezende.driver_service.dto.UpdateApprovalStatusRequestDTO;
 import com.rezende.driver_service.services.DriverService;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +17,11 @@ public class AdminDriverController {
     }
 
     @PatchMapping("/{driverId}/approval-status")
-    public ResponseEntity<DriverProfileResponse> updateApprovalStatus(
+    public ResponseEntity<DriverProfileResponseDTO> updateApprovalStatus(
             @PathVariable final String driverId,
             @RequestBody final UpdateApprovalStatusRequestDTO dto
     ) {
-        final DriverProfileResponse response = driverService.updateApprovalStatus(driverId, dto);
+        final DriverProfileResponseDTO response = driverService.updateApprovalStatus(driverId, dto);
         return ResponseEntity.ok(response);
     }
 }

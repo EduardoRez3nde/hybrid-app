@@ -1,7 +1,7 @@
 package com.rezende.driver_service.controllers;
 
 import com.rezende.driver_service.dto.AccountStatusRequestDTO;
-import com.rezende.driver_service.dto.DriverProfileResponse;
+import com.rezende.driver_service.dto.DriverProfileResponseDTO;
 import com.rezende.driver_service.dto.OnboardDriverRequestDTO;
 import com.rezende.driver_service.services.DriverService;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +21,11 @@ public class DriverController {
     }
 
     @PostMapping("/onboard")
-    public ResponseEntity<DriverProfileResponse> submitOnboarding(
+    public ResponseEntity<DriverProfileResponseDTO> submitOnboarding(
             @RequestHeader("X-User-ID") final String userId,
             @RequestBody final OnboardDriverRequestDTO dto
     ) {
-        final DriverProfileResponse response = driverService.submitOnboarding(userId, dto);
+        final DriverProfileResponseDTO response = driverService.submitOnboarding(userId, dto);
 
         final URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -36,17 +36,17 @@ public class DriverController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<DriverProfileResponse> findMyProfile(@RequestHeader("X-User-ID") final String userId) {
-        final DriverProfileResponse response = driverService.getMyProfile(userId);
+    public ResponseEntity<DriverProfileResponseDTO> findMyProfile(@RequestHeader("X-User-ID") final String userId) {
+        final DriverProfileResponseDTO response = driverService.getMyProfile(userId);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/me/status")
-    public ResponseEntity<DriverProfileResponse> updateOperationalStatus(
+    public ResponseEntity<DriverProfileResponseDTO> updateOperationalStatus(
             @RequestHeader("X-User-ID") final String userId,
             @RequestBody final AccountStatusRequestDTO dto
     ) {
-        final DriverProfileResponse response = driverService.changeStatus(userId, dto);
+        final DriverProfileResponseDTO response = driverService.changeStatus(userId, dto);
         return ResponseEntity.ok(response);
     }
 }

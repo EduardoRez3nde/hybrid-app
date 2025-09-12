@@ -12,7 +12,7 @@ public record UserRegisterEvent(
         String email,
         RoleType roleType,
         AccountStatus accountStatus,
-        Instant eventTimestamp
+        Instant occurredAt
 ) implements DomainEvent {
 
     public static UserRegisterEvent of(final User user) {

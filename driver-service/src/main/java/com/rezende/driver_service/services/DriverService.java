@@ -32,19 +32,30 @@ public class DriverService {
 
     @Transactional
     public void processNewUserEvent(final UserRegisterEventDTO event) {
-
-        if (driverRepository.existsById(UUID.fromString(event.userId()))) return;
-
-        try {
-            final DriverProfile driver = DriverProfileFactory.fromUserCreationEvent(event);
-            driverRepository.save(driver);
-        } catch (Exception e) {
-            throw new UserEventProcessingException("Error processing UserCreatedEvent for userId: " + event.userId(), e);
+        if (driverRepository.existsById(UUID.fromString(event.userId()))) {
+            log.warn("Perfil de motorista para o userId: {} já existe. Ignorando evento de criação.", event.userId());
+            return;
         }
+        final DriverProfile driver = DriverProfileFactory.fromUserCreationEvent(event);
+        driverRepository.save(driver);
+        log.info("Perfil de motorista criado com sucesso para o userId: {}", event.userId());
     }
 
     @Transactional
-    public DriverProfileResponse submitOnboarding(final String userId, final OnboardDriverRequestDTO dto) {
+    public void processVehicleApprovalEvent(final VehicleApprovedEventDTO event) {
+        final DriverProfile driver = driverRepository.findById(UUID.fromString(event.driverId()))
+                .orElseThrow(() -> {
+                    log.error("Perfil de motorista não encontrado para o driverId: {}", event.driverId());
+                    return new DriverNotFoundException("Driver not found for ID: %s", event.driverId());
+                });
+        driver.setHasApprovedVehicle(true);
+        log.info("Motorista com ID {} agora tem um veículo aprovado.", driver.getUserId());
+
+        driverRepository.save(driver);
+    }
+
+    @Transactional
+    public DriverProfileResponseDTO submitOnboarding(final String userId, final OnboardDriverRequestDTO dto) {
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
@@ -55,18 +66,18 @@ public class DriverService {
 
         driverEventProducer.sendDriverOnboardingSubmittedEvent(DriverOnboardingSubmittedEvent.of(driverSave));
 
-        return DriverProfileResponse.of(driverSave);
+        return DriverProfileResponseDTO.of(driverSave);
     }
 
     @Transactional(readOnly = true)
-    public DriverProfileResponse getMyProfile(final String userId) {
+    public DriverProfileResponseDTO getMyProfile(final String userId) {
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
-        return DriverProfileResponse.of(driver);
+        return DriverProfileResponseDTO.of(driver);
     }
 
     @Transactional
-    public DriverProfileResponse changeStatus(final String userId, final AccountStatusRequestDTO dto) {
+    public DriverProfileResponseDTO changeStatus(final String userId, final AccountStatusRequestDTO dto) {
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
@@ -77,11 +88,11 @@ public class DriverService {
 
         driverEventProducer.sendOperationalStatusChanged(DriverOperationalStatusChangedEvent.of(driverSave));
 
-        return DriverProfileResponse.of(driverSave);
+        return DriverProfileResponseDTO.of(driverSave);
     }
 
     @Transactional
-    public DriverProfileResponse updateApprovalStatus(final String userId, final UpdateApprovalStatusRequestDTO dto) {
+    public DriverProfileResponseDTO updateApprovalStatus(final String userId, final UpdateApprovalStatusRequestDTO dto) {
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
@@ -100,6 +111,6 @@ public class DriverService {
         else
             driverEventProducer.sendDriverRejectedEvent(DriverRejectedEvent.of(driverSave));
 
-        return DriverProfileResponse.of(driverSave);
+        return DriverProfileResponseDTO.of(driverSave);
     }
 }

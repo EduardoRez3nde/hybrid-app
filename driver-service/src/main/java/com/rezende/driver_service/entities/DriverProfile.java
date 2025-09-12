@@ -39,6 +39,9 @@ public class DriverProfile {
     @Enumerated(EnumType.STRING)
     private OperationalStatus operationalStatus;
 
+    @Column(nullable = false)
+    private boolean hasApprovedVehicle = false;
+
     @CreationTimestamp
     private Instant createdAt;
 
