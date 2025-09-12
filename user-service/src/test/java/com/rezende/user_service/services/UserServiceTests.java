@@ -1,16 +1,18 @@
 package com.rezende.user_service.services;
 
 import com.rezende.user_service.dto.RegisterCustomerDTO;
+import com.rezende.user_service.dto.RegisterUser;
 import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.entities.User;
 import com.rezende.user_service.enums.AccountStatus;
 import com.rezende.user_service.enums.RoleType;
+import com.rezende.user_service.events.UserRegisterEvent;
 import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
+import com.rezende.user_service.exceptions.UserRegistrationException;
 import com.rezende.user_service.repositories.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,9 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -33,6 +33,12 @@ public class UserServiceTests {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private KeycloakClientService keycloakClient;
+
+    @Mock
+    private UserEventProducer userEventProducer;
 
     @InjectMocks
     private UserService userService;
@@ -63,181 +69,71 @@ public class UserServiceTests {
     }
 
     @Test
-    @DisplayName("Quando o email não existe, cria o usuário com sucesso")
-    void shouldRegisterNewUserSuccessfully() {
+    @DisplayName("Deve criar um utilizador com sucesso")
+    void registerShouldCreateUserSuccessfully() {
 
-        final UUID id = UUID.randomUUID();
-        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
-                "Fulano",
-                "fulano@gmail.com",
-                "123456"
-        );
+        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "fulano@email.com", "senhaForte123");
 
-        final User savedUser = User.from(
-                id,
-                "Fulano",
-                "fulano@gmail.com",
-                "encoded-123456",
-                RoleType.CUSTOMER,
-                AccountStatus.ACTIVE
-        );
-        savedUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
+        when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
+        when(keycloakClient.createUserInKeycloak(dto)).thenReturn("123e4567-e89b-12d3-a456-426614174000");
+        when(passwordEncoder.encode(dto.getPassword())).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(userRepository.findByEmail(registerUser.email()))
-                .thenReturn(Optional.empty());
-
-        when(passwordEncoder.encode(registerUser.password()))
-                .thenReturn("encoded-123456");
-
-        when(userRepository.save(any(User.class)))
-                .thenReturn(savedUser);
-
-        final UserResponseDTO response = userService.register(registerUser);
+        final UserResponseDTO response = userService.register(dto);
 
         assertNotNull(response);
-        assertEquals("3e56c042-b325-4eb4-a8cb-d197c16f28d2", response.id());
-        assertEquals(registerUser.name(), response.name());
-        assertEquals(registerUser.email(), response.email());
-        assertEquals(RoleType.CUSTOMER, response.roleType());
+        assertEquals(dto.getName(), response.name());
+        assertEquals(dto.getEmail(), response.email());
 
-        verify(userRepository).findByEmail(registerUser.email());
-        verify(passwordEncoder).encode(registerUser.password());
-        verify(userRepository, timeout(1)).save(any(User.class));
+        verify(userEventProducer, times(1)).sendUserCreatedEvent(any(UserRegisterEvent.class));
+        verify(keycloakClient, times(1)).assignRealmRoleToUser("123e4567-e89b-12d3-a456-426614174000", dto.getRoleType());
+        verify(keycloakClient, times(1)).sendVerificationEmail("123e4567-e89b-12d3-a456-426614174000");
     }
 
     @Test
-    @DisplayName("Quando o email já existe, lança EmailAlreadyExistsException")
-    void shouldThrowExceptionWhenEmailAlreadyExists() {
-        final UUID id = UUID.randomUUID();
-        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
-                "Fulano",
-                "fulano@gmail.com",
-                "123456"
-        );
+    @DisplayName("Deve lançar EmailAlreadyExistsException quando o e-mail já existir")
+    void registerShouldThrowExceptionWhenEmailAlreadyExists() {
 
-        final User existingUser = User.from(
-                id,
-                "Fulano",
-                "fulano@gmail.com",
-                "encoded-123456",
-                RoleType.CUSTOMER,
-                AccountStatus.ACTIVE
-        );
-        existingUser.setId(UUID.fromString("3e56c042-b325-4eb4-a8cb-d197c16f28d2"));
+        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "fulano@email.com", "senhaForte123");
 
-        when(userRepository.findByEmail(registerUser.email()))
-                .thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(mock(User.class)));
 
-        assertThatThrownBy(() -> userService.register(registerUser))
-                .isInstanceOf(EmailAlreadyExistsException.class)
-                .hasMessageContaining("There is already a user with this email.");
+        assertThrows(EmailAlreadyExistsException.class, () -> userService.register(dto));
 
-        verify(userRepository, never()).save(any(User.class));
-        verify(passwordEncoder, never()).encode(anyString());
+        verify(keycloakClient, never()).createUserInKeycloak(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("Verificar se a senha e criptografada antes de salvar")
-    void shouldEncodePasswordBeforeSavingUser() {
+    @DisplayName("Deve reverter a criação no Keycloak e lançar UserRegistrationException quando falha ao salvar")
+    void registerShouldRollbackAndThrowExceptionWhenSaveFails() {
 
-        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
-                "Fulano",
-                "fulano@gmail.com",
-                "123456"
-        );
+        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "fulano@email.com", "senhaForte123");
 
-        when(userRepository.findByEmail(registerUser.email()))
-                .thenReturn(Optional.empty());
+        when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
+        when(keycloakClient.createUserInKeycloak(dto)).thenReturn("123e4567-e89b-12d3-a456-426614174000");
+        when(passwordEncoder.encode(dto.getPassword())).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("DB failure"));
 
-        when(passwordEncoder.encode(registerUser.password()))
-                .thenReturn("encoded-123456");
+        final UserRegistrationException exception = assertThrows(UserRegistrationException.class, () -> userService.register(dto));
 
-        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        when(userRepository.save(userCaptor.capture()))
-                .thenAnswer(invocation -> {
-                    final User user = invocation.getArgument(0);
-                    user.setId(UUID.randomUUID());
-                    return user;
-                });
-
-        final UserResponseDTO response = userService.register(registerUser);
-        final User saved = userCaptor.getValue();
-
-        assertNotNull(response);
-        assertEquals("encoded-123456", saved.getPassword());
-
-        verify(passwordEncoder).encode("123456");
+        assertTrue(exception.getMessage().contains("Could not save user locally"));
+        verify(keycloakClient, times(1)).deleteUserInKeycloak("123e4567-e89b-12d3-a456-426614174000");
     }
 
     @Test
-    @DisplayName("Todo novo usuário registrado recebe o papel CUSTOMER")
-    void shouldAssignCustomerRoleWhenRegisteringNewUser() {
+    @DisplayName("Deve retornar o DTO do utilizador quando o ID existe")
+    void findMeShouldReturnUserDTOWhenIdExists() {
 
-        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
-                "Fulano",
-                "fulano@gmail.com",
-                "123456"
-        );
+        final String userId = "123e4567-e89b-12d3-a456-426614174000";
+        final User user = User.from(UUID.fromString(userId), "Fulano", "fulano@email.com", "senha", RoleType.CUSTOMER, AccountStatus.ACTIVE);
 
-        when(userRepository.findByEmail(registerUser.email()))
-                .thenReturn(Optional.empty());
+        when(userRepository.findById(UUID.fromString(userId))).thenReturn(Optional.of(user));
 
-        when(passwordEncoder.encode(registerUser.password()))
-                .thenReturn("encoded-123456");
-
-        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        when(userRepository.save(userCaptor.capture()))
-                .thenAnswer(invocation -> {
-                    final User user = invocation.getArgument(0);
-                    user.setId(UUID.randomUUID());
-                    return user;
-                });
-
-        final UserResponseDTO response = userService.register(registerUser);
-        final User saved = userCaptor.getValue();
+        final UserResponseDTO response = userService.findMe(userId);
 
         assertNotNull(response);
-        assertEquals(RoleType.CUSTOMER, response.roleType());
-        assertEquals(RoleType.CUSTOMER, saved.getRoleType());
-
-        verify(userRepository).findByEmail(registerUser.email());
-        verify(userRepository, times(1)).save(any(User.class));
-        verify(passwordEncoder).encode("123456");
-    }
-
-    @Test
-    @DisplayName("Todo novo usuário registrado recebe o status de conta ACTIVE")
-    void shouldAssignActiveAccountStatusWhenRegisteringNewUser() {
-
-        final RegisterCustomerDTO registerUser = RegisterCustomerDTO.from(
-                "Fulano",
-                "fulano@gmail.com",
-                "123456"
-        );
-
-        when(userRepository.findByEmail(registerUser.email()))
-                .thenReturn(Optional.empty());
-
-        when(passwordEncoder.encode(registerUser.password()))
-                .thenReturn("encoded-123456");
-
-        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        when(userRepository.save(userCaptor.capture()))
-                .thenAnswer(invocation -> {
-                    final User user = invocation.getArgument(0);
-                    user.setId(UUID.randomUUID());
-                    return user;
-                });
-
-        final UserResponseDTO response = userService.register(registerUser);
-        final User saved = userCaptor.getValue();
-
-        assertNotNull(response);
-        assertEquals(AccountStatus.ACTIVE, response.accountStatus());
-        assertEquals(AccountStatus.ACTIVE, saved.getAccountStatus());
-
-        verify(userRepository).findByEmail(registerUser.email());
-        verify(userRepository, times(1)).save(any(User.class));
-        verify(passwordEncoder).encode("123456");
+        assertEquals(user.getName(), response.name());
+        assertEquals(user.getEmail(), response.email());
     }
 }
