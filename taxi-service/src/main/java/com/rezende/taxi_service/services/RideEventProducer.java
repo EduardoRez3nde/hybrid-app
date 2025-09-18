@@ -1,4 +1,4 @@
-package com.rezende.taxi_service;
+package com.rezende.taxi_service.services;
 
 import com.rezende.taxi_service.event.DomainEvent;
 import com.rezende.taxi_service.event.RideRequestedEvent;

@@ -13,7 +13,12 @@ public record RegisterDriverDTO(
         @Schema(description = "Primeiro Nome do utilizador.", example = "Fulano")
         @NotBlank(message = "{name.not.blank}")
         @Size(min = 2, max = 100, message = "{name.invalid.length}")
-        String name,
+        String firstName,
+
+        @Schema(description = "Segundo Nome do utilizador.", example = "da Silva")
+        @NotBlank(message = "{name.not.blank}")
+        @Size(min = 2, max = 100, message = "{name.invalid.length}")
+        String lastName,
 
         @Schema(description = "Endereço de e-mail único do utilizador.", example = "fulano.silva@email.com")
         @NotBlank(message = "{email.not.blank}")
@@ -29,11 +34,12 @@ public record RegisterDriverDTO(
 
 ) implements RegisterUser {
     public static RegisterDriverDTO from(
-            final String name,
+            final String firstName,
+            final String lastName,
             final String email,
             final String password
     ) {
-        return new RegisterDriverDTO(name, email, password);
+        return new RegisterDriverDTO(firstName, lastName, email, password);
     }
 
     public RoleType getRoleType() {
@@ -41,8 +47,13 @@ public record RegisterDriverDTO(
     }
 
     @Override
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
+    }
+
+    @Override
+    public String getLastName() {
+        return lastName;
     }
 
     @Override

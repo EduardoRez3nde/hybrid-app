@@ -21,12 +21,12 @@ public class Ride {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false)
-    private String passengerId;
+    private UUID passengerId;
 
-    private String driverId;
+    private UUID driverId;
 
     private UUID vehicleId;
 

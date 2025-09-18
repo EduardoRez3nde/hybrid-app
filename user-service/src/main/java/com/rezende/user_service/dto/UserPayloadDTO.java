@@ -14,7 +14,7 @@ public record UserPayloadDTO(
                 user.getEmail(),
                 user.getEmail(),
                 true,
-                user.getName(),
+                user.getFirstName(),
                 List.of(new CredentialsDTO("password", user.getPassword(), false))
         );
     }

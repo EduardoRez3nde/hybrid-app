@@ -55,7 +55,8 @@ public class UserService {
 
             final User user = User.from(
                     UUID.fromString(keycloakId),
-                    dto.getName(),
+                    dto.getFirstName(),
+                    dto.getLastName(),
                     dto.getEmail(),
                     passwordEncoder.encode(dto.getPassword()),
                     dto.getRoleType(),

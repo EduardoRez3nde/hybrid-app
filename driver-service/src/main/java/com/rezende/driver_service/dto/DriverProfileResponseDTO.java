@@ -8,7 +8,8 @@ import java.time.Instant;
 
 public record DriverProfileResponseDTO(
         String userId,
-        String name,
+        String firsName,
+        String lastName,
         String email,
         String cnhNumber,
         ApprovalStatus approvalStatus,
@@ -19,7 +20,8 @@ public record DriverProfileResponseDTO(
     public static DriverProfileResponseDTO of(final DriverProfile driver) {
         return new DriverProfileResponseDTO(
                 String.valueOf(driver.getUserId()),
-                driver.getName(),
+                driver.getFirstName(),
+                driver.getLastName(),
                 driver.getEmail(),
                 driver.getCnhNumber(),
                 driver.getApprovalStatus(),

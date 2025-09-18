@@ -4,7 +4,8 @@ import com.rezende.user_service.enums.RoleType;
 
 public interface RegisterUser {
 
-    String getName();
+    String getFirstName();
+    String getLastName();
     String getEmail();
     String getPassword();
     RoleType getRoleType();

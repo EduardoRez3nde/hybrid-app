@@ -51,7 +51,8 @@ public class UserServiceTests {
         final UUID userId = UUID.fromString(userIdString);
         final User mockUser = User.from(
                 userId,
-                "Utilizador Encontrado",
+                "Utilizador",
+                "Encontrado",
                 "encontrado@email.com",
                 "senha-codificada",
                 RoleType.CUSTOMER,
@@ -62,7 +63,8 @@ public class UserServiceTests {
 
         assertNotNull(result);
         assertEquals(userIdString, result.id());
-        assertEquals("Utilizador Encontrado", result.name());
+        assertEquals("Utilizador", result.firstName());
+        assertEquals("Utilizador", result.lastName());
         assertEquals("encontrado@email.com", result.email());
 
         verify(userRepository, times(1)).findById(userId);
@@ -72,7 +74,7 @@ public class UserServiceTests {
     @DisplayName("Deve criar um utilizador com sucesso")
     void registerShouldCreateUserSuccessfully() {
 
-        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "fulano@email.com", "senhaForte123");
+        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "da Silva", "fulano@email.com", "senhaForte123");
 
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
         when(keycloakClient.createUserInKeycloak(dto)).thenReturn("123e4567-e89b-12d3-a456-426614174000");
@@ -82,7 +84,8 @@ public class UserServiceTests {
         final UserResponseDTO response = userService.register(dto);
 
         assertNotNull(response);
-        assertEquals(dto.getName(), response.name());
+        assertEquals(dto.getFirstName(), response.firstName());
+        assertEquals(dto.getLastName(), response.lastName());
         assertEquals(dto.getEmail(), response.email());
 
         verify(userEventProducer, times(1)).sendUserCreatedEvent(any(UserRegisterEvent.class));
@@ -94,7 +97,7 @@ public class UserServiceTests {
     @DisplayName("Deve lançar EmailAlreadyExistsException quando o e-mail já existir")
     void registerShouldThrowExceptionWhenEmailAlreadyExists() {
 
-        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "fulano@email.com", "senhaForte123");
+        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "da Silva", "fulano@email.com", "senhaForte123");
 
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(mock(User.class)));
 
@@ -108,7 +111,7 @@ public class UserServiceTests {
     @DisplayName("Deve reverter a criação no Keycloak e lançar UserRegistrationException quando falha ao salvar")
     void registerShouldRollbackAndThrowExceptionWhenSaveFails() {
 
-        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "fulano@email.com", "senhaForte123");
+        final RegisterUser dto = RegisterCustomerDTO.from("Fulano", "da Silva", "fulano@email.com", "senhaForte123");
 
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
         when(keycloakClient.createUserInKeycloak(dto)).thenReturn("123e4567-e89b-12d3-a456-426614174000");
@@ -126,14 +129,15 @@ public class UserServiceTests {
     void findMeShouldReturnUserDTOWhenIdExists() {
 
         final String userId = "123e4567-e89b-12d3-a456-426614174000";
-        final User user = User.from(UUID.fromString(userId), "Fulano", "fulano@email.com", "senha", RoleType.CUSTOMER, AccountStatus.ACTIVE);
+        final User user = User.from(UUID.fromString(userId), "Fulano", "da Silva", "fulano@email.com", "senha", RoleType.CUSTOMER, AccountStatus.ACTIVE);
 
         when(userRepository.findById(UUID.fromString(userId))).thenReturn(Optional.of(user));
 
         final UserResponseDTO response = userService.findMe(userId);
 
         assertNotNull(response);
-        assertEquals(user.getName(), response.name());
+        assertEquals(user.getFirstName(), response.firstName());
+        assertEquals(user.getLastName(), response.lastName());
         assertEquals(user.getEmail(), response.email());
     }
 }

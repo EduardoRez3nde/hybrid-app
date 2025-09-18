@@ -12,8 +12,10 @@ public class DriverProfileFactory {
     public static DriverProfile fromUserCreationEvent(final UserRegisterEventDTO event) {
         return DriverProfile.builder()
                 .userId(UUID.fromString(event.userId()))
-                .name(event.name())
+                .firstName(event.firstName())
+                .lastName(event.lastName())
                 .email(event.email())
+                .hasApprovedVehicle(false)
                 .approvalStatus(ApprovalStatus.PENDING_APPROVAL)
                 .operationalStatus(OperationalStatus.OFFLINE)
                 .build();

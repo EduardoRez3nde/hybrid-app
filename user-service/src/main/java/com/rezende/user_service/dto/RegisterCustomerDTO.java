@@ -13,7 +13,12 @@ public record RegisterCustomerDTO(
         @Schema(description = "Primeiro Nome do utilizador.", example = "Fulano")
         @NotBlank(message = "{name.not.blank}")
         @Size(min = 2, max = 100, message = "{name.invalid.length}")
-        String name,
+        String firstName,
+
+        @Schema(description = "Segundo Nome do utilizador.", example = "da Silva")
+        @NotBlank(message = "{name.not.blank}")
+        @Size(min = 2, max = 100, message = "{name.invalid.length}")
+        String lastName,
 
         @Schema(description = "Endereço de e-mail único do utilizador.", example = "fulano.silva@email.com")
         @NotBlank(message = "{email.not.blank}")
@@ -29,20 +34,27 @@ public record RegisterCustomerDTO(
 
 ) implements RegisterUser {
     public static RegisterCustomerDTO from(
-            final String name,
+            final String firstName,
+            final String lastName,
             final String email,
             final String password
     ) {
-        return new RegisterCustomerDTO(name, email, password);
+        return new RegisterCustomerDTO(firstName, lastName, email, password);
     }
 
     public RoleType getRoleType() {
         return RoleType.CUSTOMER;
     }
 
+
     @Override
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
+    }
+
+    @Override
+    public String getLastName() {
+        return lastName;
     }
 
     @Override

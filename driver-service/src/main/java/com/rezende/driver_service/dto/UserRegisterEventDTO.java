@@ -8,7 +8,8 @@ import java.time.Instant;
 
 public record UserRegisterEventDTO(
         String userId,
-        String name,
+        String firstName,
+        String lastName,
         String email,
         RoleType roleType,
         AccountStatus accountStatus,

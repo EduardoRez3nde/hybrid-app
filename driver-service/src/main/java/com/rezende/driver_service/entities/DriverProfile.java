@@ -25,7 +25,10 @@ public class DriverProfile {
     private UUID userId;
 
     @Column(nullable = false)
-    private String name;
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
 
     @Column(nullable = false)
     private String email;
@@ -40,7 +43,7 @@ public class DriverProfile {
     private OperationalStatus operationalStatus;
 
     @Column(nullable = false)
-    private boolean hasApprovedVehicle = false;
+    private boolean hasApprovedVehicle;
 
     @CreationTimestamp
     private Instant createdAt;

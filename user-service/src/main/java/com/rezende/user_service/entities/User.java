@@ -23,7 +23,10 @@ public class User {
     private UUID id;
 
     @Column(nullable = false)
-    private String name;
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -41,14 +44,16 @@ public class User {
 
     private User(
             final UUID id,
-            final String name,
+            final String firstName,
+            final String lastName,
             final String email,
             final String password,
             final RoleType roleType,
             final AccountStatus accountStatus
     ) {
         this.id = id;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.roleType = roleType;
@@ -57,12 +62,13 @@ public class User {
 
     public static User from(
             final UUID id,
-            final String name,
+            final String firstName,
+            final String lastName,
             final String email,
             final String password,
             final RoleType roleType,
             final AccountStatus accountStatus
     ) {
-        return new User(id, name, email, password, roleType, accountStatus);
+        return new User(id, firstName, lastName, email, password, roleType, accountStatus);
     }
 }

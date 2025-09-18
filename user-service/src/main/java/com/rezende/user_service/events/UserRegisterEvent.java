@@ -8,7 +8,8 @@ import java.time.Instant;
 
 public record UserRegisterEvent(
         String userId,
-        String name,
+        String firstName,
+        String lastName,
         String email,
         RoleType roleType,
         AccountStatus accountStatus,
@@ -18,7 +19,8 @@ public record UserRegisterEvent(
     public static UserRegisterEvent of(final User user) {
         return new UserRegisterEvent(
                 String.valueOf(user.getId()),
-                user.getName(),
+                user.getFirstName(),
+                user.getLastName(),
                 user.getEmail(),
                 user.getRoleType(),
                 user.getAccountStatus(),
