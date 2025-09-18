@@ -198,6 +198,38 @@ services:
     volumes:
       - pg-data-driver-service:/var/lib/postgresql/data
 
+
+  matchmaking-service:
+    build: ./matchmaking-service
+    container_name: matchmaking-service
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME_MATCHMAKING_SERVICE=admin}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_MATCHMAKING_SERVICE=admin}
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+    networks:
+      - hybrid-service-network
+    depends_on:
+      - matchmaking-db
+      - config-server
+      - discovery-server
+  matchmaking-db:
+    image: postgres:16
+    container_name: matchmaking-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME_MATCHMAKING_SERVICE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_MATCHMAKING_SERVICE}
+      POSTGRES_DB: matchmaking_service_db
+    ports:
+      - "5436:5432"
+    networks:
+      - hybrid-service-network
+    volumes:
+      - pg-data-matchmaking-service:/var/lib/postgresql/data
+
   redis:
     image: redis:8.2
     container_name: redis
@@ -252,6 +284,7 @@ services:
       - hybrid-service-network
 
 volumes:
+  pg-data-matchmaking-service:
   pg-data-user-service:
   pg-data-taxi-service:
   keycloak-db-data:

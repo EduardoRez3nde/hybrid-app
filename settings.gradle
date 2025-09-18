@@ -14,7 +14,8 @@ include(
         "user-service",
         "taxi-service",
         "vehicle-service",
-        "driver-service"
+        "driver-service",
+        "matchmaking-service"
 //        "delivery-service",
 //        "notification-service",
 //        "payment-service"

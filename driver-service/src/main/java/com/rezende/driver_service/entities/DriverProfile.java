@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.geo.Point;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -35,6 +36,9 @@ public class DriverProfile {
 
     @Column(unique = true)
     private String cnhNumber;
+
+    @Column(columnDefinition = "geography(Point, 4326)")
+    private Point currentLocation;
 
     @Enumerated(EnumType.STRING)
     private ApprovalStatus approvalStatus;
