@@ -1,6 +1,7 @@
 package com.rezende.driver_service.controllers;
 
 import com.rezende.driver_service.dto.AccountStatusRequestDTO;
+import com.rezende.driver_service.dto.CoordinatesDTO;
 import com.rezende.driver_service.dto.DriverProfileResponseDTO;
 import com.rezende.driver_service.dto.OnboardDriverRequestDTO;
 import com.rezende.driver_service.services.DriverService;
@@ -48,5 +49,14 @@ public class DriverController {
     ) {
         final DriverProfileResponseDTO response = driverService.changeStatus(userId, dto);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{driverId}/location")
+    public ResponseEntity<Void> updateLocation(
+            @PathVariable final String driverId,
+            @RequestBody final CoordinatesDTO coordinates
+    ) {
+        driverService.updateLocation(driverId, coordinates);
+        return ResponseEntity.noContent().build();
     }
 }

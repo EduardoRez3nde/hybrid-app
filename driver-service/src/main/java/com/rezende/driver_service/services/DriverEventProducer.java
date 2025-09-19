@@ -17,15 +17,18 @@ public class DriverEventProducer {
     private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
     private final String driverOperationalStatus;
     private final String driverLifecycle;
+    private final String driverLocationUpdates;
 
     public DriverEventProducer(
             @Value("${app.kafka.topics.driver-status-updates}") final String driverStatusUpdates,
             @Value("${app.kafka.topics.driver-lifecycle}") final String driverLifecycle,
+            @Value("${app.kafka.topics.driver-location-updates}") final String driverLocationUpdates,
             final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
         this.kafkaTemplate = kafkaTemplate;
         this.driverLifecycle = driverLifecycle;
         this.driverOperationalStatus = driverStatusUpdates;
+        this.driverLocationUpdates = driverLocationUpdates;
     }
 
     public void sendDriverOnboardingSubmittedEvent(final DriverOnboardingSubmittedEvent event) {
@@ -40,9 +43,9 @@ public class DriverEventProducer {
         sendEvent(event, driverLifecycle);
     }
 
-    public void sendOperationalStatusChanged(final DriverStatusUpdateEvent event) {
-        sendEvent(event, driverOperationalStatus);
-    }
+    public void sendOperationalStatusChanged(final DriverStatusUpdateEvent event) { sendEvent(event, driverOperationalStatus); }
+
+    public void sendDriverLocationEvent(final DriverLocationEvent event) { sendEvent(event, driverLocationUpdates); }
 
     private void sendEvent(final DomainEvent event, final String topic) {
 

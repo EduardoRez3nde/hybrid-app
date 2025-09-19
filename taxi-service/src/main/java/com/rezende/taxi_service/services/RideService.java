@@ -31,7 +31,7 @@ public class RideService {
 
     /**
      * Orquestra a solicitação de uma nova corrida.
-     * Este método é transacional, garantindo que a criação da corrida e a publicação
+     * Este método e transacional, garantindo que a criação da corrida e a publicação
      * do evento ocorram de forma atomica (embora a entrega do evento seja assíncrona).
      *
      * @param passengerId O ID do passageiro que esta a solicitar a corrida (vindo do token).

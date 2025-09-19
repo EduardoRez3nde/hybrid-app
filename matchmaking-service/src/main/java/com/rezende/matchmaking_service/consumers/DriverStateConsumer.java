@@ -53,6 +53,19 @@ public class DriverStateConsumer {
         }
     }
 
+    @RetryableTopic(
+            attempts = "4",
+            backoff = @Backoff(delay = 1000, multiplier = 2.0),
+            dltTopicSuffix = ".DLT")
+    @KafkaListener(
+            topics = "${app.kafka.topics.driver-location-updates}",
+            groupId = "${spring.kafka.consumer.group-id}")
+    public void handleDriverLocationUpdates(@Payload final DriverStatusUpdateEvent event, final Acknowledgment ack) {
+
+        log.info("Evento DriverStatusUpdateEvent recebido para o driverId: {}", event.driverId());
+
+    }
+
     @DltHandler
     public void handleDlt(final Object event) {
         log.error("[DLT] Mensagem recebida na Dead Letter Topic. Evento: {}", event);

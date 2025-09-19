@@ -10,6 +10,7 @@ import com.rezende.driver_service.exceptions.DriverNotFoundException;
 import com.rezende.driver_service.mapper.DriverProfileFactory;
 import com.rezende.driver_service.repositories.DriverProfileRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.geo.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,7 +59,7 @@ public class DriverService {
     public DriverProfileResponseDTO submitOnboarding(final String userId, final OnboardDriverRequestDTO dto) {
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", userId));
 
         driver.setCnhNumber(dto.cnhNumber());
 
@@ -72,7 +73,7 @@ public class DriverService {
     @Transactional(readOnly = true)
     public DriverProfileResponseDTO getMyProfile(final String userId) {
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", userId));
         return DriverProfileResponseDTO.of(driver);
     }
 
@@ -80,7 +81,7 @@ public class DriverService {
     public DriverProfileResponseDTO changeStatus(final String userId, final AccountStatusRequestDTO dto) {
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", userId));
 
         driver.setOperationalStatus(dto.status());
 
@@ -95,7 +96,7 @@ public class DriverService {
     public DriverProfileResponseDTO updateApprovalStatus(final String userId, final UpdateApprovalStatusRequestDTO dto) {
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new DriverNotFoundException("Driver with id %d not Found", userId));
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", userId));
 
         if (driver.getApprovalStatus() != ApprovalStatus.PENDING_APPROVAL)
             throw new DriverNotPendingVerificationException("This driver is not pending verification.");
@@ -112,5 +113,17 @@ public class DriverService {
             driverEventProducer.sendDriverRejectedEvent(DriverRejectedEvent.of(driverSave));
 
         return DriverProfileResponseDTO.of(driverSave);
+    }
+
+    @Transactional
+    public void updateLocation(final String driverId, final CoordinatesDTO coordinates) {
+
+        final DriverProfile driver = driverRepository.findById(UUID.fromString(driverId))
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", driverId));
+
+        driver.setCurrentLocation(new Point(coordinates.longitude(), coordinates.latitude()));
+        final DriverProfile driverSave = driverRepository.save(driver);
+
+        driverEventProducer.sendDriverLocationEvent(DriverLocationEvent.of(driverSave));
     }
 }
