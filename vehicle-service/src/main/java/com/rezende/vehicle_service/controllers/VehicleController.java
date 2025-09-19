@@ -45,4 +45,10 @@ public class VehicleController {
         final Page<VehicleResponseDTO> response = vehicleService.getVehiclesByDriver(driverId);
         return ResponseEntity.ok(response);
     }
+
+    @PatchMapping("$/{vehicleId}/approve")
+    public ResponseEntity<VehicleResponseDTO> approvedVehicle(@PathVariable final String vehicleId) {
+        final VehicleResponseDTO response = vehicleService.approvedVehicle(vehicleId);
+        return ResponseEntity.ok(response);
+    }
 }

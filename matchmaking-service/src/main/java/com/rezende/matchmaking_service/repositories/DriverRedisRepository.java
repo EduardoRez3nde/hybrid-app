@@ -11,6 +11,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Repository
 public class DriverRedisRepository {
@@ -19,26 +21,33 @@ public class DriverRedisRepository {
 
     private static final String GEO_KEY = "driver_locations";
     private static final String HASH_KEY_PREFIX = "driver:details:";
+    private static final long CACHE_TTL_MINUTES = 5L;
 
     public DriverRedisRepository(final RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     /**
-     * Salva ou atualiza os detalhes completos de um motorista ativo e a sua localização.
+     * Salva ou atualiza os detalhes completos de um motorista ativo e a sua localização,
+     * usando a estrutura de dados Hash do Redis. Também define um tempo de expiração.
      * @param driver DTO com os dados do motorista.
      */
     public void saveOrUpdate(final ActiveDriverDTO driver) {
-
         final String hashKey = HASH_KEY_PREFIX + driver.id();
 
-        redisTemplate.opsForValue().set(hashKey, driver);
+        final Map<String, String> driverData = Map.of(
+                "rating", String.valueOf(driver.rating()),
+                "vehicleType", driver.vehicleType()
+        );
+        redisTemplate.opsForHash().putAll(hashKey, driverData);
+        redisTemplate.expire(hashKey, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
 
         redisTemplate.opsForGeo().add(
                 GEO_KEY,
                 new Point(driver.longitude(), driver.latitude()),
                 driver.id()
         );
+        redisTemplate.expire(GEO_KEY, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
     }
 
     /**

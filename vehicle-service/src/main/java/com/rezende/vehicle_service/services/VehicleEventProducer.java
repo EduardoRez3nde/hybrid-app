@@ -1,6 +1,7 @@
 package com.rezende.vehicle_service.services;
 
 import com.rezende.vehicle_service.events.DomainEvent;
+import com.rezende.vehicle_service.events.VehicleApprovedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,32 +16,34 @@ import java.util.concurrent.CompletableFuture;
 public class VehicleEventProducer {
 
     private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
-    private final String topic;
+    private final String approvedVehicleTopic;
 
     public VehicleEventProducer(
-            @Value("${app.kafka.topics.vehicle-events}") final String topic,
+            @Value("${app.kafka.topics.approved-vehicle}") final String approvedVehicleTopic,
             final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
-        this.topic = topic;
+        this.approvedVehicleTopic = approvedVehicleTopic;
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void sendEvent(final DomainEvent event) {
+    public void sendVehicleApprovedEvent(final VehicleApprovedEvent event) {
+        sendEvent(event, approvedVehicleTopic);
+    }
+
+    private void sendEvent(final DomainEvent event, final String topic) {
 
         final String key = event.vehicleId();
-        final CompletableFuture<SendResult<String, DomainEvent>> future = kafkaTemplate.send(topic, key, event);
+
+        final CompletableFuture<SendResult<String, DomainEvent>> future =
+                kafkaTemplate.send(topic, key, event);
 
         future.whenComplete((result, ex) -> {
-
-            final String eventType = event.getClass().getSimpleName();
-
-            if (ex == null){
+            if (ex == null) {
                 final RecordMetadata metadata = result.getRecordMetadata();
-                log.info("Evento '{}' enviado com sucesso para o tópico '{}', partição {}, offset {}. Chave: {}",
-                        eventType, metadata.topic(), metadata.partition(), metadata.offset(), key);
+                log.info("Evento {} foi enviado com sucesso para o topico '{}', partição {}, offset {}. Chave: {}",
+                        event, metadata.topic(), metadata.partition(), metadata.offset(), key);
             } else {
-                log.error("Falha ao enviar evento '{}' para o Kafka com a chave {}. Erro: {}",
-                        eventType, key, ex.getMessage());
+                log.error("Falha ao enviar o evento {} com chave {}. Erro: {}", event, key, ex.getMessage());
             }
         });
     }

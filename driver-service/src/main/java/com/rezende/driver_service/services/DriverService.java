@@ -86,7 +86,7 @@ public class DriverService {
 
         final DriverProfile driverSave = driverRepository.save(driver);
 
-        driverEventProducer.sendOperationalStatusChanged(DriverOperationalStatusChangedEvent.of(driverSave));
+        driverEventProducer.sendOperationalStatusChanged(DriverStatusUpdateEvent.of(driverSave));
 
         return DriverProfileResponseDTO.of(driverSave);
     }

@@ -17,5 +17,4 @@ public record ActiveDriverDTO(
         double latitude,
         double rating,
         String vehicleType
-) {
-}
+) { }

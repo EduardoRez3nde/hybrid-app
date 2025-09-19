@@ -9,8 +9,8 @@ import org.springframework.kafka.core.KafkaAdmin;
 @Configuration
 public class KafkaTopicsConfig {
 
-    @Value("${app.kafka.topics.driver-operational-status}")
-    private String driverOperationalStatusTopicName;
+    @Value("${app.kafka.topics.driver-status-updates}")
+    private String driverStatusUpdatesTopicName;
 
     @Value("${app.kafka.topics.driver-lifecycle}")
     private String driverLifecycleTopicName;
@@ -18,7 +18,7 @@ public class KafkaTopicsConfig {
     @Bean
     public KafkaAdmin.NewTopics driverServiceTopics() {
         return new KafkaAdmin.NewTopics(
-                TopicBuilder.name(driverOperationalStatusTopicName)
+                TopicBuilder.name(driverStatusUpdatesTopicName)
                         .partitions(3)
                         .replicas(1)
                         .build(),
