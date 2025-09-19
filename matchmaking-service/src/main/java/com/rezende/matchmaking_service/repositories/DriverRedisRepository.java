@@ -1,32 +1,94 @@
 package com.rezende.matchmaking_service.repositories;
 
 
+import com.rezende.matchmaking_service.dto.ActiveDriverDTO;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public class ActiveDriverRepository {
+public class DriverRedisRepository {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final String KEY = "active-drivers";
 
-    public ActiveDriverRepository(final RedisTemplate<String, Object> redisTemplate) {
+    private static final String GEO_KEY = "driver_locations";
+    private static final String HASH_KEY_PREFIX = "driver:details:";
+
+    public DriverRedisRepository(final RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
+    }
+
+    /**
+     * Salva ou atualiza os detalhes completos de um motorista ativo e a sua localização.
+     * @param driver DTO com os dados do motorista.
+     */
+    public void saveOrUpdate(final ActiveDriverDTO driver) {
+
+        final String hashKey = HASH_KEY_PREFIX + driver.id();
+
+        redisTemplate.opsForValue().set(hashKey, driver);
+
+        redisTemplate.opsForGeo().add(
+                GEO_KEY,
+                new Point(driver.longitude(), driver.latitude()),
+                driver.id()
+        );
+    }
+
+    /**
+     * Remove um motorista do cache de motoristas ativos.
+     * Chamado quando o motorista fica offline.
+     * @param driverId O ID do motorista a ser removido.
+     */
+    public void delete(final String driverId) {
+        redisTemplate.delete(HASH_KEY_PREFIX + driverId);
+        redisTemplate.opsForGeo().remove(GEO_KEY, driverId);
+    }
+
+    /**
+     * Encontra os IDs de todos os motoristas ativos dentro de um raio específico.
+     * @param center O ponto central da busca.
+     * @param radiusInMeters O raio da busca em metros.
+     * @return Uma lista de IDs dos motoristas encontrados.
+     */
+    public List<String> findNearbyDriverIds(final Point center, final double radiusInMeters) {
+
+        final Circle circle = new Circle(center, new Distance(radiusInMeters, RedisGeoCommands.DistanceUnit.METERS));
+
+        final GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResult = redisTemplate.opsForGeo().radius(GEO_KEY, circle);
+
+        if (geoResult == null) return List.of();
+
+        return geoResult.getContent().stream()
+                .map(result -> (String) result.getContent().getName())
+                .toList();
+    }
+
+    /**
+     * Obtém os detalhes de um motorista específico a partir do seu Hash no Redis.
+     * @param driverId O ID do motorista.
+     * @return Um DTO com os detalhes do motorista.
+     */
+    public ActiveDriverDTO findById(final String driverId) {
+        return (ActiveDriverDTO) redisTemplate.opsForValue().get(HASH_KEY_PREFIX + driverId);
     }
 
     public void updateLocation(final String driverId, final double latitude, final double longitude) {
         redisTemplate.opsForGeo().add(
-                KEY,
+                GEO_KEY,
                 new Point(longitude, latitude),
                 driverId
         );
     }
 
     public Point getLocation(final String driverId) {
-        final List<Point> locations = redisTemplate.opsForGeo().position(KEY, driverId);
+        final List<Point> locations = redisTemplate.opsForGeo().position(GEO_KEY, driverId);
         return (locations != null && !locations.isEmpty()) ? locations.getFirst() : null;
     }
 }

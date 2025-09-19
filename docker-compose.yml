@@ -198,7 +198,6 @@ services:
     volumes:
       - pg-data-driver-service:/var/lib/postgresql/data
 
-
   matchmaking-service:
     build: ./matchmaking-service
     container_name: matchmaking-service
