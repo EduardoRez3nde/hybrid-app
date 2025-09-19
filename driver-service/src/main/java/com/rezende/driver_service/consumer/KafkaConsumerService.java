@@ -1,7 +1,7 @@
 package com.rezende.driver_service.consumer;
 
 import com.rezende.driver_service.dto.UserRegisterEventDTO;
-import com.rezende.driver_service.dto.VehicleApprovedEventDTO;
+import com.rezende.driver_service.dto.VehicleApprovedEvent;
 import com.rezende.driver_service.services.DriverService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.DltHandler;
@@ -46,11 +46,11 @@ public class KafkaConsumerService {
             backoff = @Backoff(delay = 1000, multiplier = 2.0),
             dltTopicSuffix = ".DLT")
     @KafkaListener(
-            topics = "${app.kafka.topics.vehicle-events}",
+            topics = "${app.kafka.topics.approved-vehicle}",
             groupId = "${spring.kafka.consumer.group-id}"
     )
-    public void handleVehicleApproval(@Payload final VehicleApprovedEventDTO event, final Acknowledgment ack) {
-        log.info("Evento VehicleApprovedEventDTO recebido para o driverId: {}", event.driverId());
+    public void handleVehicleApproval(@Payload final VehicleApprovedEvent event, final Acknowledgment ack) {
+        log.info("Evento VehicleApprovedEvent recebido para o driverId: {}", event.driverId());
         try {
             driverService.processVehicleApprovalEvent(event);
             ack.acknowledge();

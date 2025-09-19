@@ -1,8 +1,5 @@
 package com.rezende.matchmaking_service.consumers;
 
-import com.rezende.driver_service.dto.UserRegisterEventDTO;
-import com.rezende.driver_service.dto.VehicleApprovedEventDTO;
-import com.rezende.driver_service.services.DriverService;
 import com.rezende.matchmaking_service.dto.ActiveDriverDTO;
 import com.rezende.matchmaking_service.dto.DriverStatusUpdateEvent;
 import com.rezende.matchmaking_service.enums.OperationalStatus;
@@ -34,35 +31,25 @@ public class DriverStateConsumer {
             topics = "${app.kafka.topics.driver-status-updates}",
             groupId = "${spring.kafka.consumer.group-id}")
     public void handleDriverStatusUpdates(@Payload final DriverStatusUpdateEvent event, final Acknowledgment ack) {
-        log.info("Evento DriverStatusUpdateEvent recebido para o driverId: {}", event.driverId());
-        try {
-            if (event.newStatus() == OperationalStatus.ONLINE)
-                driverRedisRepository.saveOrUpdate(ActiveDriverDTO);
-            ack.acknowledge();
-            log.info("Evento de criação de utilizador para o userId: {} processado com sucesso.", event.driverId());
-        } catch (Exception e) {
-            log.error("Erro ao processar o evento UserRegisterEventDTO para o userId: {}. A mensagem será reenviada.", event.driverId(), e);
-            throw new RuntimeException("Error processing User Created Event", e);
-        }
-    }
 
-    @RetryableTopic(
-            attempts = "4",
-            backoff = @Backoff(delay = 1000, multiplier = 2.0),
-            dltTopicSuffix = ".DLT")
-    @KafkaListener(
-            topics = "${app.kafka.topics.vehicle-events}",
-            groupId = "${spring.kafka.consumer.group-id}"
-    )
-    public void handleVehicleApproval(@Payload final VehicleApprovedEventDTO event, final Acknowledgment ack) {
-        log.info("Evento VehicleApprovedEventDTO recebido para o driverId: {}", event.driverId());
+        log.info("Evento DriverStatusUpdateEvent recebido para o driverId: {}", event.driverId());
+
         try {
-            driverService.processVehicleApprovalEvent(event);
+            if (event.newStatus() == OperationalStatus.ONLINE) {
+                driverRedisRepository.saveOrUpdate(ActiveDriverDTO.of(event));
+                log.info("Motorista {} adicionado/atualizado no cache de matchmaking.", event.driverId());
+            }
+            else {
+                driverRedisRepository.delete(event.driverId());
+                log.info("Motorista {} removido do cache de matchmaking devido ao status: {}", event.driverId(), event.newStatus());
+            }
+
             ack.acknowledge();
-            log.info("Evento de aprovação de veículo para o driverId: {} processado com sucesso.", event.driverId());
+            log.info("Evento de status para o driverId: {} processado com sucesso.", event.driverId());
+
         } catch (Exception e) {
-            log.error("Erro ao processar o evento VehicleApprovedEventDTO para o driverId: {}. A mensagem será reenviada.", event.driverId(), e);
-            throw new RuntimeException("Error processing Vehicle Approved Event", e);
+            log.error("Erro ao processar o evento de status para o driverId: {}. A mensagem será reenviada.", event.driverId(), e);
+            throw new RuntimeException("Erro a processar evento de status do motorista", e);
         }
     }
 

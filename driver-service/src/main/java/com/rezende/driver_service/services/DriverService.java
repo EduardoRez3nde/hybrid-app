@@ -42,7 +42,7 @@ public class DriverService {
     }
 
     @Transactional
-    public void processVehicleApprovalEvent(final VehicleApprovedEventDTO event) {
+    public void processVehicleApprovalEvent(final VehicleApprovedEvent event) {
         final DriverProfile driver = driverRepository.findById(UUID.fromString(event.driverId()))
                 .orElseThrow(() -> {
                     log.error("Perfil de motorista não encontrado para o driverId: {}", event.driverId());
