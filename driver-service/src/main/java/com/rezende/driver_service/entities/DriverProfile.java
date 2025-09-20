@@ -6,9 +6,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.geo.Point;
+import org.locationtech.jts.geom.Point;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @EqualsAndHashCode(of = "userId")
@@ -49,9 +51,16 @@ public class DriverProfile {
     @Column(nullable = false)
     private boolean hasApprovedVehicle;
 
+    @Column(nullable = false)
+    private double averageRating;
+
+    @Column(nullable = false)
+    private double totalRatings;
+
     @CreationTimestamp
     private Instant createdAt;
 
     @UpdateTimestamp
     private Instant updatedAt;
+
 }

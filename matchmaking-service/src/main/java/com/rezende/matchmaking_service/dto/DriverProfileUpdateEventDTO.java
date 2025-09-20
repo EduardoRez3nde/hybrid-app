@@ -2,11 +2,11 @@ package com.rezende.matchmaking_service.dto;
 
 import java.time.Instant;
 
-public record DriverLocationUpdatesEvent(
+public record DriverProfileUpdateEventDTO(
         String driverId,
-        double latitude,
-        double longitude,
+        double rating,
         Instant occurredAt
+
 ) implements DomainEvent {
 
     @Override

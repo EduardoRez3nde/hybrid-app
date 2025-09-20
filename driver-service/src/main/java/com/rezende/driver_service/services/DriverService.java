@@ -4,13 +4,13 @@ import com.rezende.driver_service.dto.*;
 import com.rezende.driver_service.entities.DriverProfile;
 import com.rezende.driver_service.enums.ApprovalStatus;
 import com.rezende.driver_service.events.*;
-import com.rezende.driver_service.exceptions.DriverNotPendingVerificationException;
-import com.rezende.driver_service.exceptions.UserEventProcessingException;
 import com.rezende.driver_service.exceptions.DriverNotFoundException;
+import com.rezende.driver_service.exceptions.DriverNotPendingVerificationException;
 import com.rezende.driver_service.mapper.DriverProfileFactory;
 import com.rezende.driver_service.repositories.DriverProfileRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.geo.Point;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +22,16 @@ public class DriverService {
 
     private final DriverProfileRepository driverRepository;
     private final DriverEventProducer driverEventProducer;
+    private final GeometryFactory geometryFactory;
 
     public DriverService(
             final DriverProfileRepository driverRepository,
-            final DriverEventProducer driverEventProducer
+            final DriverEventProducer driverEventProducer,
+            final GeometryFactory geometryFactory
     ) {
         this.driverRepository = driverRepository;
         this.driverEventProducer = driverEventProducer;
+        this.geometryFactory = geometryFactory;
     }
 
     @Transactional
@@ -43,15 +46,17 @@ public class DriverService {
     }
 
     @Transactional
-    public void processVehicleApprovalEvent(final VehicleApprovedEvent event) {
-        final DriverProfile driver = driverRepository.findById(UUID.fromString(event.driverId()))
+    public void processVehicleApprovalEvent(final VehicleApprovedEventDTO event) {
+
+        final DriverProfile driver = driverRepository
+                .findById(UUID.fromString(event.driverId()))
                 .orElseThrow(() -> {
                     log.error("Perfil de motorista não encontrado para o driverId: {}", event.driverId());
                     return new DriverNotFoundException("Driver not found for ID: %s", event.driverId());
                 });
+
         driver.setHasApprovedVehicle(true);
         log.info("Motorista com ID {} agora tem um veículo aprovado.", driver.getUserId());
-
         driverRepository.save(driver);
     }
 
@@ -121,9 +126,28 @@ public class DriverService {
         final DriverProfile driver = driverRepository.findById(UUID.fromString(driverId))
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", driverId));
 
-        driver.setCurrentLocation(new Point(coordinates.longitude(), coordinates.latitude()));
+        driver.setCurrentLocation(geometryFactory.createPoint(new Coordinate(coordinates.longitude(), coordinates.latitude())));
         final DriverProfile driverSave = driverRepository.save(driver);
 
         driverEventProducer.sendDriverLocationEvent(DriverLocationEvent.of(driverSave));
+    }
+
+    @Transactional
+    public void processDriverRatedEvent(final DriverRatedEventDTO event) {
+
+        log.info("Recebido evento de avaliação para o motorista {}", event.driverId());
+
+        final DriverProfile driver = driverRepository.findById(UUID.fromString(event.driverId()))
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not found"));
+
+        final double newAverage = calculateNewAverage(driver.getAverageRating(), driver.getTotalRatings(), event.rating());
+        driver.setAverageRating(newAverage);
+        driver.setTotalRatings(driver.getTotalRatings() + 1);
+        driverRepository.save(driver);
+        driverEventProducer.sendDriverAverageRating(DriverProfileUpdateEvent.of(driver));
+    }
+
+    public static double calculateNewAverage(final double oldAverage, final double totalRatings, final int rating) {
+        return ((oldAverage * totalRatings) + rating) / (totalRatings + 1.0);
     }
 }

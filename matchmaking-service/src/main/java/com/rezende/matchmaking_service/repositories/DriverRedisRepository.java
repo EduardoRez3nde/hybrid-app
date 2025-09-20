@@ -61,7 +61,7 @@ public class DriverRedisRepository {
     }
 
     /**
-     * Encontra os IDs de todos os motoristas ativos dentro de um raio específico.
+     * Encontra os IDs de todos os motoristas ativos dentro de um raio especifico.
      * @param center O ponto central da busca.
      * @param radiusInMeters O raio da busca em metros.
      * @return Uma lista de IDs dos motoristas encontrados.
@@ -80,12 +80,23 @@ public class DriverRedisRepository {
     }
 
     /**
-     * Obtém os detalhes de um motorista específico a partir do seu Hash no Redis.
+     * Obtém os detalhes de um motorista especifico a partir do seu Hash no Redis.
      * @param driverId O ID do motorista.
      * @return Um DTO com os detalhes do motorista.
      */
     public ActiveDriverDTO findById(final String driverId) {
         return (ActiveDriverDTO) redisTemplate.opsForValue().get(HASH_KEY_PREFIX + driverId);
+    }
+
+    /**
+     * Atualiza apenas a avaliação (rating) de um motorista existente no cache do Redis.
+     *
+     * @param driverId O ID do motorista a ser atualizado.
+     * @param newRating A nova avaliacao media do motorista.
+     */
+    public void updateRating(final String driverId, final double newRating) {
+        String hashKey = HASH_KEY_PREFIX + driverId;
+        redisTemplate.opsForHash().put(hashKey, "rating", String.valueOf(newRating));
     }
 
     public void updateLocation(final String driverId, final double latitude, final double longitude) {

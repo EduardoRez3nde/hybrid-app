@@ -1,6 +1,7 @@
 package com.rezende.taxi_service.services;
 
 import com.rezende.taxi_service.event.DomainEvent;
+import com.rezende.taxi_service.event.DriverRatedEvent;
 import com.rezende.taxi_service.event.RideRequestedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -16,19 +17,30 @@ import java.util.concurrent.CompletableFuture;
 public class RideEventProducer {
 
     private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
-    private final String topic;
+    private final String rideEventsTopic;
+    private final String driverRatedTopic;
 
     public RideEventProducer(
             final KafkaTemplate<String, DomainEvent> kafkaTemplate,
-            @Value("${app.kafka.topics.ride-events}") final String topic
+            @Value("${app.kafka.topics.ride-events}") final String rideEventsTopic,
+            @Value("${app.kafka.topics.driver-rated}") String driverRatedTopic
     ) {
         this.kafkaTemplate = kafkaTemplate;
-        this.topic = topic;
+        this.rideEventsTopic = rideEventsTopic;
+        this.driverRatedTopic = driverRatedTopic;
     }
 
     public void sendRideRequestedEvent(final RideRequestedEvent event) {
+        sendEvent(event, rideEventsTopic);
+    }
 
-        final String key = event.rideId().toString();
+    public void sendDriverRatedEvent(final DriverRatedEvent event) {
+        sendEvent(event, driverRatedTopic);
+    }
+
+    private void sendEvent(final DomainEvent event, final String topic) {
+
+        final String key = event.getAggregateId();
         final CompletableFuture<SendResult<String, DomainEvent>> future = kafkaTemplate.send(topic, key, event);
 
         future.whenComplete((result, ex) -> {

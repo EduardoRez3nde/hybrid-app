@@ -1,11 +1,10 @@
 package com.rezende.driver_service.dto;
 
 import com.rezende.driver_service.events.DomainEvent;
-import com.rezende.vehicle_service.entity.Vehicle;
 
 import java.time.Instant;
 
-public record VehicleApprovedEvent(
+public record VehicleApprovedEventDTO(
         String vehicleId,
         String driverId,
         String vehicleType,

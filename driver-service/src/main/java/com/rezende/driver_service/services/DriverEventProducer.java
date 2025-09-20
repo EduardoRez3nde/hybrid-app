@@ -18,8 +18,10 @@ public class DriverEventProducer {
     private final String driverOperationalStatus;
     private final String driverLifecycle;
     private final String driverLocationUpdates;
+    private final String driverAverageRating;
 
     public DriverEventProducer(
+            @Value("${app.kafka.topics.driver-average-rating}") final String driverAverageRating,
             @Value("${app.kafka.topics.driver-status-updates}") final String driverStatusUpdates,
             @Value("${app.kafka.topics.driver-lifecycle}") final String driverLifecycle,
             @Value("${app.kafka.topics.driver-location-updates}") final String driverLocationUpdates,
@@ -29,11 +31,10 @@ public class DriverEventProducer {
         this.driverLifecycle = driverLifecycle;
         this.driverOperationalStatus = driverStatusUpdates;
         this.driverLocationUpdates = driverLocationUpdates;
+        this.driverAverageRating = driverAverageRating;
     }
 
-    public void sendDriverOnboardingSubmittedEvent(final DriverOnboardingSubmittedEvent event) {
-        sendEvent(event, driverLifecycle);
-    }
+    public void sendDriverOnboardingSubmittedEvent(final DriverOnboardingSubmittedEvent event) { sendEvent(event, driverLifecycle); }
 
     public void sendDriverApprovedEvent(final DriverApprovedEvent event) {
         sendEvent(event, driverLifecycle);
@@ -46,6 +47,8 @@ public class DriverEventProducer {
     public void sendOperationalStatusChanged(final DriverStatusUpdateEvent event) { sendEvent(event, driverOperationalStatus); }
 
     public void sendDriverLocationEvent(final DriverLocationEvent event) { sendEvent(event, driverLocationUpdates); }
+
+    public void sendDriverAverageRating(final DriverProfileUpdateEvent event) { sendEvent(event, driverAverageRating); }
 
     private void sendEvent(final DomainEvent event, final String topic) {
 

@@ -1,7 +1,8 @@
 package com.rezende.driver_service.consumer;
 
+import com.rezende.driver_service.dto.DriverRatedEventDTO;
 import com.rezende.driver_service.dto.UserRegisterEventDTO;
-import com.rezende.driver_service.dto.VehicleApprovedEvent;
+import com.rezende.driver_service.dto.VehicleApprovedEventDTO;
 import com.rezende.driver_service.services.DriverService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.DltHandler;
@@ -30,11 +31,14 @@ public class KafkaConsumerService {
             topics = "${app.kafka.topics.user-events}",
             groupId = "${spring.kafka.consumer.group-id}")
     public void handleUserCreation(@Payload final UserRegisterEventDTO event, final Acknowledgment ack) {
+
         log.info("Evento UserRegisterEventDTO recebido para o userId: {}", event.userId());
+
         try {
             driverService.processNewUserEvent(event);
             ack.acknowledge();
             log.info("Evento de criação de utilizador para o userId: {} processado com sucesso.", event.userId());
+
         } catch (Exception e) {
             log.error("Erro ao processar o evento UserRegisterEventDTO para o userId: {}. A mensagem será reenviada.", event.userId(), e);
             throw new RuntimeException("Error processing User Created Event", e);
@@ -49,17 +53,44 @@ public class KafkaConsumerService {
             topics = "${app.kafka.topics.approved-vehicle}",
             groupId = "${spring.kafka.consumer.group-id}"
     )
-    public void handleVehicleApproval(@Payload final VehicleApprovedEvent event, final Acknowledgment ack) {
+    public void handleVehicleApproval(@Payload final VehicleApprovedEventDTO event, final Acknowledgment ack) {
+
         log.info("Evento VehicleApprovedEvent recebido para o driverId: {}", event.driverId());
+
         try {
             driverService.processVehicleApprovalEvent(event);
             ack.acknowledge();
             log.info("Evento de aprovação de veículo para o driverId: {} processado com sucesso.", event.driverId());
+
         } catch (Exception e) {
             log.error("Erro ao processar o evento VehicleApprovedEventDTO para o driverId: {}. A mensagem será reenviada.", event.driverId(), e);
             throw new RuntimeException("Error processing Vehicle Approved Event", e);
         }
     }
+
+    @RetryableTopic(
+            attempts = "4",
+            backoff = @Backoff(delay = 1000, multiplier = 2.0),
+            dltTopicSuffix = ".DLT")
+    @KafkaListener(
+            topics = "${app.kafka.topics.driver-rated-events}",
+            groupId = "${spring.kafka.consumer.group-id}"
+    )
+    public void handleDriverRatedEvent(@Payload final DriverRatedEventDTO event, final Acknowledgment ack) {
+
+        log.info("Evento DriverRatedEventDTO recebido para o driverId: {}", event.driverId());
+
+        try {
+            driverService.processDriverRatedEvent(event);
+            ack.acknowledge();
+            log.info("Evento de avaliação do motorista para o driverId: {} processado com sucesso.", event.driverId());
+
+        } catch (Exception e) {
+            log.error("Erro ao processar o evento DriverRatedEventDTO para o driverId: {}. A mensagem será reenviada.", event.driverId(), e);
+            throw new RuntimeException("Error processing Vehicle Approved Event", e);
+        }
+    }
+
 
     @DltHandler
     public void handleDlt(final Object event) {
