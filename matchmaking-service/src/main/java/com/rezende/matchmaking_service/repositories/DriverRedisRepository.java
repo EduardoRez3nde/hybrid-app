@@ -12,7 +12,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Repository
 public class DriverRedisRepository {
@@ -61,6 +64,32 @@ public class DriverRedisRepository {
     }
 
     /**
+     * Calcula a distância em metros entre um motorista e um ponto geográfico.
+     *
+     * @param driverId O ID do motorista (membro existente no GeoSet).
+     * @param passengerLocation O ponto geográfico do passageiro.
+     * @return A distância em metros.
+     */
+    public int getDistanceInMeters(final String driverId, final Point passengerLocation) {
+
+        String passengerTempKey = "passenger:location:" + UUID.randomUUID().toString();
+
+        try {
+            redisTemplate.opsForGeo().add(GEO_KEY, passengerLocation, passengerTempKey);
+            Distance distance = redisTemplate.opsForGeo().distance(
+                    GEO_KEY,
+                    driverId,
+                    passengerTempKey,
+                    RedisGeoCommands.DistanceUnit.METERS
+            );
+            return (distance != null) ? (int) distance.getValue() : Integer.MAX_VALUE;
+
+        } finally {
+            redisTemplate.opsForGeo().remove(GEO_KEY, passengerTempKey);
+        }
+    }
+
+    /**
      * Encontra os IDs de todos os motoristas ativos dentro de um raio especifico.
      * @param center O ponto central da busca.
      * @param radiusInMeters O raio da busca em metros.
@@ -86,6 +115,18 @@ public class DriverRedisRepository {
      */
     public ActiveDriverDTO findById(final String driverId) {
         return (ActiveDriverDTO) redisTemplate.opsForValue().get(HASH_KEY_PREFIX + driverId);
+    }
+
+    /**
+     * Busca os detalhes completos de múltiplos motoristas a partir dos seus IDs.
+     * @param driverIds A lista de IDs dos motoristas.
+     * @return Uma lista de ActiveDriverDTO com os detalhes.
+     */
+    public List<ActiveDriverDTO> findAllByIds(final List<String> driverIds) {
+        return driverIds.stream()
+                .map(this::findById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     /**

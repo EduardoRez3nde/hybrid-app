@@ -1,19 +1,15 @@
-package com.rezende.matchmaking_service.dto;
-
-import com.rezende.matchmaking_service.event.DomainEvent;
+package com.rezende.matchmaking_service.event;
 
 import java.time.Instant;
 
-public record DriverProfileUpdateEventDTO(
-        String driverId,
-        double rating,
+public record NoDriverFoundEvent(
+        String rideId,
         Instant occurredAt
-
 ) implements DomainEvent {
 
     @Override
     public String getAggregateId() {
-        return driverId;
+        return rideId;
     }
 
     @Override

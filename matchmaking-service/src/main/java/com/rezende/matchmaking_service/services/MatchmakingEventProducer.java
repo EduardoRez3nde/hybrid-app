@@ -1,41 +1,41 @@
-package com.rezende.taxi_service.services;
+package com.rezende.matchmaking_service.services;
 
-import com.rezende.taxi_service.event.DomainEvent;
-import com.rezende.taxi_service.event.DriverRatedEvent;
-import com.rezende.taxi_service.event.RideRequestedEvent;
+import com.rezende.matchmaking_service.event.DomainEvent;
+import com.rezende.matchmaking_service.event.DriverAssignedToRideEvent;
+import com.rezende.matchmaking_service.event.NoDriverFoundEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-@Service
-public class RideEventProducer {
+@Component
+public class MatchmakingEventProducer {
 
     private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
-    private final String rideEventsTopic;
-    private final String driverRatedTopic;
+    private final String driverAssignedRideTopicName;
+    private final String noDriverFoundTopicName;
 
-    public RideEventProducer(
-            final KafkaTemplate<String, DomainEvent> kafkaTemplate,
-            @Value("${app.kafka.topics.ride-events}") final String rideEventsTopic,
-            @Value("${app.kafka.topics.driver-rated}") String driverRatedTopic
+    public MatchmakingEventProducer(
+            @Value("${app.kafka.topics.driver-assigned-ride-event}") final String driverAssignedRideTopicName,
+            @Value("${app.kafka.topics.no-driver-found-event}") final String noDriverFoundTopicName,
+            final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
         this.kafkaTemplate = kafkaTemplate;
-        this.rideEventsTopic = rideEventsTopic;
-        this.driverRatedTopic = driverRatedTopic;
+        this.driverAssignedRideTopicName = driverAssignedRideTopicName;
+        this.noDriverFoundTopicName = noDriverFoundTopicName;
     }
 
-    public void sendRideRequestedEvent(final RideRequestedEvent event) {
-        sendEvent(event, rideEventsTopic);
+    public void sendDriverAssignedRideEvent(final DriverAssignedToRideEvent event) {
+        sendEvent(event, driverAssignedRideTopicName);
     }
 
-    public void sendDriverRatedEvent(final DriverRatedEvent event) {
-        sendEvent(event, driverRatedTopic);
+    public void sendNoDriverFoundEvent(final NoDriverFoundEvent event) {
+        sendEvent(event, driverAssignedRideTopicName);
     }
 
     private void sendEvent(final DomainEvent event, final String topic) {

@@ -1,5 +1,7 @@
 package com.rezende.matchmaking_service.dto;
 
+import com.rezende.matchmaking_service.event.DomainEvent;
+
 import java.time.Instant;
 
 public record DriverLocationUpdatesEvent(
@@ -10,7 +12,12 @@ public record DriverLocationUpdatesEvent(
 ) implements DomainEvent {
 
     @Override
-    public String userId() {
+    public String getAggregateId() {
         return driverId;
+    }
+
+    @Override
+    public Instant getOccurredAt() {
+        return occurredAt;
     }
 }
