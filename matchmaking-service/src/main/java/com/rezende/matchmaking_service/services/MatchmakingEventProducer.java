@@ -35,7 +35,7 @@ public class MatchmakingEventProducer {
     }
 
     public void sendNoDriverFoundEvent(final NoDriverFoundEvent event) {
-        sendEvent(event, driverAssignedRideTopicName);
+        sendEvent(event, noDriverFoundTopicName);
     }
 
     private void sendEvent(final DomainEvent event, final String topic) {
