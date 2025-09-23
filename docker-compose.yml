@@ -235,23 +235,26 @@ services:
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME_NOTIFICATION_SERVICE=admin}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_NOTIFICATION_SERVICE=admin}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME_NOTIFICATION_SERVICE:-admin}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_NOTIFICATION_SERVICE:-admin}
       - SPRING_CLOUD_CONFIG_FAIL_FAST=true
       - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+    volumes:
+      - ./secrets/serviceAccountKey.json:/app/config/firebase/serviceAccountKey.json:ro
     networks:
       - hybrid-service-network
     depends_on:
       - notification-db
       - config-server
       - discovery-server
+
   notification-db:
     image: postgres:16
     container_name: notification-db
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USERNAME_NOTIFICATION_SERVICE}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_NOTIFICATION_SERVICE}
+      POSTGRES_USER: ${POSTGRES_USERNAME_NOTIFICATION_SERVICE:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_NOTIFICATION_SERVICE:-admin}
       POSTGRES_DB: notification_service_db
     ports:
       - "5436:5432"
