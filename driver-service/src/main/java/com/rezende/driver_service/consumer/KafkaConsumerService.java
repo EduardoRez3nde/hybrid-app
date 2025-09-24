@@ -50,7 +50,7 @@ public class KafkaConsumerService {
             backoff = @Backoff(delay = 1000, multiplier = 2.0),
             dltTopicSuffix = ".DLT")
     @KafkaListener(
-            topics = "${app.kafka.topics.approved-vehicle}",
+            topics = "${app.kafka.topics.approved-vehicle-event}",
             groupId = "${spring.kafka.consumer.group-id}"
     )
     public void handleVehicleApproval(@Payload final VehicleApprovedEventDTO event, final Acknowledgment ack) {
@@ -73,7 +73,7 @@ public class KafkaConsumerService {
             backoff = @Backoff(delay = 1000, multiplier = 2.0),
             dltTopicSuffix = ".DLT")
     @KafkaListener(
-            topics = "${app.kafka.topics.driver-rated-events}",
+            topics = "${app.kafka.topics.driver-rated-event}",
             groupId = "${spring.kafka.consumer.group-id}"
     )
     public void handleDriverRatedEvent(@Payload final DriverRatedEventDTO event, final Acknowledgment ack) {

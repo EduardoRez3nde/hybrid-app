@@ -1,20 +1,20 @@
-package com.rezende.matchmaking_service.event;
+package com.rezende.taxi_service.event;
 
 import java.time.Instant;
 
-public record DriverAssignedToRideEvent(
+public record RideRejectedByDriverEvent(
         String rideId,
         String driverId,
-        Instant assignedAt
+        Instant occurredAt
 ) implements DomainEvent {
 
     @Override
     public String getAggregateId() {
-        return driverId;
+        return rideId;
     }
 
     @Override
     public Instant getOccurredAt() {
-        return assignedAt;
+        return occurredAt;
     }
 }

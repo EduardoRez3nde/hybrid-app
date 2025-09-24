@@ -1,8 +1,6 @@
 package com.rezende.taxi_service.services;
 
-import com.rezende.taxi_service.event.DomainEvent;
-import com.rezende.taxi_service.event.DriverRatedEvent;
-import com.rezende.taxi_service.event.RideRequestedEvent;
+import com.rezende.taxi_service.event.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,25 +15,39 @@ import java.util.concurrent.CompletableFuture;
 public class RideEventProducer {
 
     private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
-    private final String rideEventsTopic;
+    private final String rideRequestEventsTopic;
     private final String driverRatedTopic;
+    private final String rideAcceptEvent;
+    private final String rideRejectEvent;
 
     public RideEventProducer(
-            final KafkaTemplate<String, DomainEvent> kafkaTemplate,
-            @Value("${app.kafka.topics.ride-events}") final String rideEventsTopic,
-            @Value("${app.kafka.topics.driver-rated}") String driverRatedTopic
+            @Value("${app.kafka.topics.ride-accept-event}") final String rideAcceptEvent,
+            @Value("${app.kafka.topics.ride-reject-event}") final String rideRejectEvent,
+            @Value("${app.kafka.topics.ride-request-event}") final String rideRequestEventsTopic,
+            @Value("${app.kafka.topics.driver-rated-event}") String driverRatedTopic,
+            final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
         this.kafkaTemplate = kafkaTemplate;
-        this.rideEventsTopic = rideEventsTopic;
+        this.rideRequestEventsTopic = rideRequestEventsTopic;
         this.driverRatedTopic = driverRatedTopic;
+        this.rideAcceptEvent = rideAcceptEvent;
+        this.rideRejectEvent = rideRejectEvent;
     }
 
     public void sendRideRequestedEvent(final RideRequestedEvent event) {
-        sendEvent(event, rideEventsTopic);
+        sendEvent(event, rideRequestEventsTopic);
     }
 
     public void sendDriverRatedEvent(final DriverRatedEvent event) {
         sendEvent(event, driverRatedTopic);
+    }
+
+    public void sendRideAcceptedEvent(final RideAcceptedByDriverEvent event) {
+        sendEvent(event, rideAcceptEvent);
+    }
+
+    public void sendRideRejectEvent(final RideRejectedByDriverEvent event) {
+        sendEvent(event, rideRejectEvent);
     }
 
     private void sendEvent(final DomainEvent event, final String topic) {

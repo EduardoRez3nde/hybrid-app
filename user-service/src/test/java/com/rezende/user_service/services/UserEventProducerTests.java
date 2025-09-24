@@ -27,11 +27,12 @@ class UserEventProducerTests {
     private SendResult<String, DomainEvent> sendResult;
 
     private UserEventProducer userEventProducer;
-    private final String topic = "user.events.v1";
+    private final String userEvents = "user.events.v1";
+    private final String userDeviceRegistrations = "user.device.registrations.v1";
 
     @BeforeEach
     void setup() {
-        userEventProducer = new UserEventProducer(topic, kafkaTemplate);
+        userEventProducer = new UserEventProducer(userEvents, userDeviceRegistrations, kafkaTemplate);
     }
 
     @Test
@@ -41,11 +42,11 @@ class UserEventProducerTests {
         when(event.userId()).thenReturn("123");
 
         final CompletableFuture<SendResult<String, DomainEvent>> future = CompletableFuture.completedFuture(sendResult);
-        when(kafkaTemplate.send(eq(topic), eq("123"), eq(event))).thenReturn(future);
+        when(kafkaTemplate.send(eq(userEvents), eq("123"), eq(event))).thenReturn(future);
 
         userEventProducer.sendUserCreatedEvent(event);
 
-        verify(kafkaTemplate, times(1)).send(topic, "123", event);
+        verify(kafkaTemplate, times(1)).send(userEvents, "123", event);
     }
 
     @Test
@@ -62,7 +63,7 @@ class UserEventProducerTests {
 
         assertDoesNotThrow(() -> userEventProducer.sendUserCreatedEvent(event));
 
-        verify(kafkaTemplate, times(1)).send(topic, "123", event);
+        verify(kafkaTemplate, times(1)).send(userEvents, "123", event);
     }
 }
 
