@@ -71,6 +71,15 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/me/register-device")
+    public ResponseEntity<Void> registerDevice(
+            @RequestHeader("X-User-ID") final String userId,
+            @RequestBody final DeviceTokenRequestDTO request
+    ) {
+        userService.registerDeviceToken(userId, request);
+        return ResponseEntity.noContent().build();
+    }
+
     private ResponseEntity<UserResponseDTO> buildCreatedResponse(final RegisterUser dto) {
         final UserResponseDTO response = userService.register(dto);
         final URI uri = ServletUriComponentsBuilder

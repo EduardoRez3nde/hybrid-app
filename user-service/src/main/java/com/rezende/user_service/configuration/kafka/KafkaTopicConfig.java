@@ -12,12 +12,18 @@ public class KafkaTopicConfig {
     @Value("${app.kafka.topics.user-events}")
     private String userEventsTopicName;
 
+    @Value("${app.kafka.topics.user-device-registrations}")
+    private String userDeviceRegistrations;
+
     @Bean
     public KafkaAdmin.NewTopics userEventsTopic() {
         return new KafkaAdmin.NewTopics(
-                TopicBuilder
-                        .name(userEventsTopicName)
-                        .partitions(1)
+                TopicBuilder.name(userEventsTopicName)
+                        .partitions(3)
+                        .replicas(1)
+                        .build(),
+                TopicBuilder.name(userDeviceRegistrations)
+                        .partitions(3)
                         .replicas(1)
                         .build()
         );

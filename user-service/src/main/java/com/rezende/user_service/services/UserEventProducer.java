@@ -16,17 +16,28 @@ import java.util.concurrent.CompletableFuture;
 public class UserEventProducer {
 
     private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
-    private final String topic;
+    private final String userEvents;
+    private final String userDeviceRegistrations;
 
     public UserEventProducer(
-            @Value("${app.kafka.topics.user-events}") final String topic,
+            @Value("${app.kafka.topics.user-events}") final String userEvents,
+            @Value("${app.kafka.topics.user-device-registrations}") final String userDeviceRegistrations,
             final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
-        this.topic = topic;
+        this.userEvents = userEvents;
+        this.userDeviceRegistrations = userDeviceRegistrations;
         this.kafkaTemplate = kafkaTemplate;
     }
 
     public void sendUserCreatedEvent(final DomainEvent event) {
+        sendEvent(event, userEvents);
+    }
+
+    public void sendRegisterDevice(final DomainEvent event) {
+        sendEvent(event, userDeviceRegistrations);
+    }
+
+    public void sendEvent(final DomainEvent event, final String topic) {
 
         final String key = event.userId();
         final CompletableFuture<SendResult<String, DomainEvent>> future = kafkaTemplate.send(topic, key, event);
@@ -34,11 +45,11 @@ public class UserEventProducer {
         future.whenComplete((result, ex) -> {
             if (ex == null){
                 final RecordMetadata metadata = result.getRecordMetadata();
-                log.info("Evento UserCreatedEvent enviado com sucesso para o tópico '{}', partição {}, offset {}. Chave: {}",
-                        metadata.topic(), metadata.partition(), metadata.offset(), key);
+                log.info("Evento {} enviado com sucesso para o tópico '{}', partição {}, offset {}. Chave: {}",
+                        event.getClass().getName(), metadata.topic(), metadata.partition(), metadata.offset(), key);
             } else {
-                log.error("Falha ao enviar UserCreatedEvent para o Kafka com a chave {}. Erro: {}",
-                        key, ex.getMessage());
+                log.error("Falha ao enviar {} para o Kafka com a chave {}. Erro: {}",
+                        event.getClass().getName(), key, ex.getMessage());
             }
         });
     }

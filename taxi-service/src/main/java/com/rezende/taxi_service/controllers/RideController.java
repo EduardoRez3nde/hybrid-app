@@ -6,6 +6,8 @@ import com.rezende.taxi_service.services.RideService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/taxi/ride")
 public class RideController {
@@ -23,5 +25,23 @@ public class RideController {
     ) {
         final RideCreationResponseDTO response = rideService.requestRide(passengerId, dto);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{rideId}/accept")
+    public ResponseEntity<Void> acceptRide(
+            @RequestHeader("X-User-ID") final String driverId,
+            @PathVariable final UUID rideId
+    ) {
+        rideService.acceptRide(UUID.fromString(driverId), rideId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{rideId}/reject")
+    public ResponseEntity<Void> rejectRide(
+            @RequestHeader("X-User-ID") final String driverId,
+            @PathVariable final UUID rideId
+    ) {
+        rideService.rejectRide(UUID.fromString(driverId), rideId);
+        return ResponseEntity.noContent().build();
     }
 }
