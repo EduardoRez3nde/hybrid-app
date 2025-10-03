@@ -18,7 +18,7 @@ public record VehicleResponseDTO(
     public static VehicleResponseDTO of(final Vehicle vehicle) {
         return new VehicleResponseDTO(
                 String.valueOf(vehicle.getId()),
-                vehicle.getDriverId(),
+                vehicle.getDriverId().toString(),
                 vehicle.getPlate(),
                 vehicle.getMake(),
                 vehicle.getModel(),

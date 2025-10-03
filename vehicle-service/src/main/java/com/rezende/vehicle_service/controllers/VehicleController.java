@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/vehicles")
@@ -39,10 +40,10 @@ public class VehicleController {
     }
 
     @GetMapping("/my-vehicles")
-    public ResponseEntity<Page<VehicleResponseDTO>> findVehiclesByDriver(
+    public ResponseEntity<List<VehicleResponseDTO>> findVehiclesByDriver(
             @RequestHeader("X-User-ID") final String driverId
     ) {
-        final Page<VehicleResponseDTO> response = vehicleService.getVehiclesByDriver(driverId);
+        final List<VehicleResponseDTO> response = vehicleService.getVehiclesByDriver(driverId);
         return ResponseEntity.ok(response);
     }
 

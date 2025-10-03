@@ -19,7 +19,7 @@ public class VehicleEventProducer {
     private final String approvedVehicleTopic;
 
     public VehicleEventProducer(
-            @Value("${app.kafka.topics.approved-vehicle}") final String approvedVehicleTopic,
+            @Value("${app.kafka.topics.approved-vehicle-event}") final String approvedVehicleTopic,
             final KafkaTemplate<String, DomainEvent> kafkaTemplate
     ) {
         this.approvedVehicleTopic = approvedVehicleTopic;
@@ -34,8 +34,7 @@ public class VehicleEventProducer {
 
         final String key = event.vehicleId();
 
-        final CompletableFuture<SendResult<String, DomainEvent>> future =
-                kafkaTemplate.send(topic, key, event);
+        final CompletableFuture<SendResult<String, DomainEvent>> future = kafkaTemplate.send(topic, key, event);
 
         future.whenComplete((result, ex) -> {
             if (ex == null) {

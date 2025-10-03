@@ -55,7 +55,7 @@ public class DriverProfile {
     private double averageRating;
 
     @Column(nullable = false)
-    private double totalRatings;
+    private long totalRatings;
 
     @CreationTimestamp
     private Instant createdAt;

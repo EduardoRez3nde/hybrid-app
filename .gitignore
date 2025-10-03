@@ -50,3 +50,5 @@ Thumbs.db
 # Anotações e arquivos pessoais
 # -------------------------
 anotacoes.md
+secrets
+notification-service/secrets

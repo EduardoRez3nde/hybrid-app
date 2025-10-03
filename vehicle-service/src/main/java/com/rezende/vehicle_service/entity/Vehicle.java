@@ -25,7 +25,7 @@ public class Vehicle {
     private UUID id;
 
     @Column(nullable = false)
-    private String driverId;
+    private UUID driverId;
 
     @Column(nullable = false, unique = true)
     private String plate;

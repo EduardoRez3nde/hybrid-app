@@ -12,13 +12,17 @@ import com.rezende.user_service.exceptions.EmailAlreadyExistsException;
 import com.rezende.user_service.exceptions.UserNotFoundException;
 import com.rezende.user_service.exceptions.UserRegistrationException;
 import com.rezende.user_service.repositories.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -48,7 +52,6 @@ public class UserService {
 
     @Transactional
     public UserResponseDTO register(final RegisterUser dto) {
-
         if (userRepository.findByEmail(dto.getEmail()).isPresent())
             throw new EmailAlreadyExistsException("There is already a user with this email.");
 
@@ -67,17 +70,27 @@ public class UserService {
                     .accountStatus(AccountStatus.ACTIVE)
                     .build();
 
-            final User userSave = userRepository.save(user);
+            final User savedUser = userRepository.save(user);
             keycloakClient.sendVerificationEmail(keycloakId);
-            userEventProducer.sendUserCreatedEvent(UserRegisterEvent.of(userSave));
 
-            return UserResponseDTO.of(userSave);
+            final UserRegisterEvent event = UserRegisterEvent.of(savedUser);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    userEventProducer.sendUserCreatedEvent(event);
+                }
+            });
+
+            return UserResponseDTO.of(savedUser);
 
         } catch (Exception e) {
+            log.error("### ERRO DURANTE O REGISTRO. REVERTENDO NO KEYCLOAK ###", e);
             keycloakClient.deleteUserInKeycloak(keycloakId);
-            throw new UserRegistrationException("Could not save user locally. Reverting Keycloak creation.");
+            throw new UserRegistrationException("Could not save user locally. Reverting Keycloak creation.", e);
         }
     }
+
 
     public void registerDeviceToken(final String userId, final DeviceTokenRequestDTO request) {
 

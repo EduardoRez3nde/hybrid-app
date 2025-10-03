@@ -1,5 +1,6 @@
 package com.rezende.user_service.events;
 
+import com.rezende.user_service.dto.UserResponseDTO;
 import com.rezende.user_service.entities.User;
 import com.rezende.user_service.enums.AccountStatus;
 import com.rezende.user_service.enums.RoleType;
@@ -18,12 +19,24 @@ public record UserRegisterEvent(
 
     public static UserRegisterEvent of(final User user) {
         return new UserRegisterEvent(
-                String.valueOf(user.getId()),
+                user.getId().toString(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
                 user.getRoleType(),
                 user.getAccountStatus(),
+                Instant.now()
+        );
+    }
+
+    public static UserRegisterEvent of(final UserResponseDTO user) {
+        return new UserRegisterEvent(
+                user.id(),
+                user.firstName(),
+                user.lastName(),
+                user.email(),
+                user.roleType(),
+                user.accountStatus(),
                 Instant.now()
         );
     }

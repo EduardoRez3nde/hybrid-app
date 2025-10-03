@@ -4,7 +4,6 @@ import com.rezende.vehicle_service.dto.CreateVehicleRequestDTO;
 import com.rezende.vehicle_service.dto.VehicleResponseDTO;
 import com.rezende.vehicle_service.entity.Vehicle;
 import com.rezende.vehicle_service.enums.VehicleStatus;
-import com.rezende.vehicle_service.enums.VehicleType;
 import com.rezende.vehicle_service.events.VehicleApprovedEvent;
 import com.rezende.vehicle_service.exceptions.PlateAlreadyExistsException;
 import com.rezende.vehicle_service.exceptions.VehicleNotFoundException;
@@ -13,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -38,7 +38,7 @@ public class VehicleService {
                 });
 
         final Vehicle vehicle = Vehicle.builder()
-                .driverId(driverId)
+                .driverId(UUID.fromString(driverId))
                 .plate(dto.plate())
                 .make(dto.make())
                 .model(dto.model())
@@ -54,9 +54,9 @@ public class VehicleService {
     }
 
     @Transactional(readOnly = true)
-    public Page<VehicleResponseDTO> getVehiclesByDriver(final String driverId) {
-        final Page<Vehicle> vehicles = vehicleRepository.findByDriverId(driverId);
-        return vehicles.map(VehicleResponseDTO::of);
+    public List<VehicleResponseDTO> getVehiclesByDriver(final String driverId) {
+        final List<Vehicle> vehicles = vehicleRepository.findByDriverId(UUID.fromString(driverId));
+        return vehicles.stream().map(VehicleResponseDTO::of).toList();
     }
 
     @Transactional

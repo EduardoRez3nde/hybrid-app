@@ -14,7 +14,7 @@ public record VehicleApprovedEvent(
     public static VehicleApprovedEvent of(final Vehicle vehicle) {
         return new VehicleApprovedEvent(
                 vehicle.getId().toString(),
-                vehicle.getDriverId(),
+                vehicle.getDriverId().toString(),
                 vehicle.getType().toString(),
                 Instant.now()
         );

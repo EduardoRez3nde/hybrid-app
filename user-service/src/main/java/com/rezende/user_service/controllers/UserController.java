@@ -2,12 +2,9 @@ package com.rezende.user_service.controllers;
 
 
 import com.rezende.user_service.dto.*;
-import com.rezende.user_service.events.UserRegisterEvent;
 import com.rezende.user_service.services.UserEventProducer;
 import com.rezende.user_service.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +22,10 @@ public class UserController {
 
     private final UserService userService;
 
-    public UserController(final UserService userService, final UserEventProducer userEventProducer) {
+    public UserController(
+            final UserService userService,
+            final UserEventProducer userEventProducer
+    ) {
         this.userService = userService;
     }
 

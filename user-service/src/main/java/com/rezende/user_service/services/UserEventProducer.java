@@ -37,9 +37,11 @@ public class UserEventProducer {
         sendEvent(event, userDeviceRegistrations);
     }
 
-    public void sendEvent(final DomainEvent event, final String topic) {
+    private void sendEvent(final DomainEvent event, final String topic) {
 
         final String key = event.userId();
+        log.info("Evento {} / Topic '{}' / Chave: {}",
+                event.toString(), topic, key);
         final CompletableFuture<SendResult<String, DomainEvent>> future = kafkaTemplate.send(topic, key, event);
 
         future.whenComplete((result, ex) -> {

@@ -18,9 +18,6 @@ public class KafkaTopicsConfig {
     @Value("${app.kafka.topics.driver-location-updates}")
     private String driverLocationUpdatesTopicName;
 
-    @Value("${app.kafka.topics.driver-rating-updates}")
-    private String driverRatingUpdatesTopicName;
-
     @Value("${app.kafka.topics.driver-average-rating}")
     private String driverAverageRating;
 
@@ -36,10 +33,6 @@ public class KafkaTopicsConfig {
                         .replicas(1)
                         .build(),
                 TopicBuilder.name(driverLocationUpdatesTopicName)
-                        .partitions(3)
-                        .replicas(1)
-                        .build(),
-                TopicBuilder.name(driverRatingUpdatesTopicName)
                         .partitions(3)
                         .replicas(1)
                         .build(),

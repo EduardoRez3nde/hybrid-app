@@ -13,11 +13,11 @@ public record UserRegisterEventDTO(
         String email,
         RoleType roleType,
         AccountStatus accountStatus,
-        Instant eventTimestamp
+        Instant occurredAt
 ) implements DomainEvent {
 
     @Override
     public Instant occurredAt() {
-        return eventTimestamp;
+        return occurredAt;
     }
 }

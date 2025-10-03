@@ -34,6 +34,8 @@ services:
       - hybrid-service-network
     depends_on:
       - config-server
+    env_file:
+      - .env
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
@@ -49,7 +51,7 @@ services:
       KC_DB_URL_DATABASE: keycloak_db
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: senha123
-      KC_HOSTNAME: keycloak
+      KC_HOSTNAME: ${DOMAIN}
       KC_HOSTNAME_STRICT: true
       KC_HTTP_RELATIVE_PATH: /auth
       KEYCLOAK_ADMIN: admin
@@ -184,7 +186,7 @@ services:
       - config-server
       - discovery-server
   driver-db:
-    image: postgres:16
+    image: postgis/postgis:16-3.5
     container_name: driver-db
     restart: always
     environment:
@@ -204,8 +206,8 @@ services:
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME_MATCHMAKING_SERVICE=admin}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_MATCHMAKING_SERVICE=admin}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME_MATCHMAKING_SERVICE}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_MATCHMAKING_SERVICE}
       - SPRING_CLOUD_CONFIG_FAIL_FAST=true
       - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
     networks:
@@ -308,11 +310,25 @@ services:
     container_name: kafdrop
     restart: unless-stopped
     ports:
-      - "9080:9080"
+      - "9080:9000"
     environment:
       KAFKA_BROKERCONNECT: "kafka:9092"
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+    networks:
+      - hybrid-service-network
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
     networks:
       - hybrid-service-network
 
@@ -326,6 +342,7 @@ volumes:
   keycloak-data:
   pg-data-vehicle-service:
   pg-data-driver-service:
+  pgadmin-data:
 networks:
   hybrid-service-network:
     driver: bridge
