@@ -91,7 +91,7 @@ public class UserService {
         }
     }
 
-
+    @Transactional
     public void registerDeviceToken(final String userId, final DeviceTokenRequestDTO request) {
 
         final User user = userRepository.findById(UUID.fromString(userId))

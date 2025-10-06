@@ -34,8 +34,6 @@ services:
       - hybrid-service-network
     depends_on:
       - config-server
-    env_file:
-      - .env
     environment:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
@@ -51,7 +49,7 @@ services:
       KC_DB_URL_DATABASE: keycloak_db
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: senha123
-      KC_HOSTNAME: ${DOMAIN}
+      KC_HOSTNAME: keycloak
       KC_HOSTNAME_STRICT: true
       KC_HTTP_RELATIVE_PATH: /auth
       KEYCLOAK_ADMIN: admin
@@ -60,7 +58,8 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak-db
-    command: start-dev
+    command:
+      - start-dev
     networks:
       - hybrid-service-network
   keycloak-db:
@@ -108,7 +107,7 @@ services:
       - discovery-server
 
   taxi-db:
-    image: postgres:16
+    image: postgis/postgis:16-3.5
     container_name: taxi-db
     restart: always
     environment:

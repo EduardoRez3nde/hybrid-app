@@ -42,6 +42,8 @@ public class GatewaySecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/vehicles/**").hasAuthority("ROLE_DRIVER")
                         .pathMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .pathMatchers("/api/drivers/**").hasAuthority("ROLE_DRIVER")
+                        .pathMatchers(HttpMethod.POST, "/api/taxi/ride").hasAuthority("ROLE_CUSTOMER")
+                        .pathMatchers(HttpMethod.PATCH, "/api/taxi/ride/**").hasAuthority("ROLE_DRIVER")
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter())))

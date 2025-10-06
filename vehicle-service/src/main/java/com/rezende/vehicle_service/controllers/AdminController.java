@@ -20,7 +20,7 @@ public class AdminController {
         this.vehicleService = vehicleService;
     }
 
-    @PatchMapping("$/{vehicleId}/approve")
+    @PatchMapping("/{vehicleId}/approve")
     public ResponseEntity<VehicleResponseDTO> approvedVehicle(@PathVariable final String vehicleId) {
         final VehicleResponseDTO response = vehicleService.approvedVehicle(vehicleId);
         return ResponseEntity.ok(response);
