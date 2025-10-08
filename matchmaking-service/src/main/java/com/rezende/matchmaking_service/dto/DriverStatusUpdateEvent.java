@@ -10,7 +10,6 @@ public record DriverStatusUpdateEvent(
         double latitude,
         double longitude,
         double rating,
-        String vehicleType,
         OperationalStatus newStatus,
         Instant eventTimestamp
 ) { }

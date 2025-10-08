@@ -3,6 +3,7 @@ package com.rezende.matchmaking_service.entities;
 import ai.timefold.solver.core.api.domain.solution.*;
 import ai.timefold.solver.core.api.domain.valuerange.ValueRangeProvider;
 import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rezende.matchmaking_service.repositories.DriverRedisRepository;
 import lombok.Builder;
@@ -27,7 +28,7 @@ public class DriverAssignedSolution {
     private List<MatchmakingDriver> matchmakingDrivers;
 
     @PlanningScore
-    private HardSoftScore score;
+    private HardSoftLongScore score;
 
     @ProblemFactProperty
     @JsonIgnore
@@ -36,7 +37,7 @@ public class DriverAssignedSolution {
     public DriverAssignedSolution(
             final RideRequest rideRequest,
             final List<MatchmakingDriver> matchmakingDrivers,
-            final HardSoftScore score,
+            final HardSoftLongScore score,
             final DriverRedisRepository driverRedisRepository
     ) {
         this.rideRequest = rideRequest;

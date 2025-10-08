@@ -1,6 +1,8 @@
 package com.rezende.taxi_service.services;
 
+import com.rezende.taxi_service.dto.RideRequestedEventDTO;
 import com.rezende.taxi_service.event.*;
+import com.rezende.taxi_service.mapper.RideEventMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +36,7 @@ public class RideEventProducer {
         this.rideRejectEvent = rideRejectEvent;
     }
 
-    public void sendRideRequestedEvent(final RideRequestedEvent event) {
+    public void sendRideRequestedEvent(final RideRequestedEventDTO event) {
         sendEvent(event, rideRequestEventsTopic);
     }
 

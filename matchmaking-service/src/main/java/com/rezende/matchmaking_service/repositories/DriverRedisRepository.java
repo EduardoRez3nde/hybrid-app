@@ -2,12 +2,14 @@ package com.rezende.matchmaking_service.repositories;
 
 
 import com.rezende.matchmaking_service.dto.ActiveDriverDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 public class DriverRedisRepository {
 
@@ -26,7 +29,9 @@ public class DriverRedisRepository {
     private static final String HASH_KEY_PREFIX = "driver:details:";
     private static final long CACHE_TTL_MINUTES = 5L;
 
-    public DriverRedisRepository(final RedisTemplate<String, Object> redisTemplate) {
+    public DriverRedisRepository(
+            final RedisTemplate<String, Object> redisTemplate
+    ) {
         this.redisTemplate = redisTemplate;
     }
 
@@ -36,21 +41,27 @@ public class DriverRedisRepository {
      * @param driver DTO com os dados do motorista.
      */
     public void saveOrUpdate(final ActiveDriverDTO driver) {
-        final String hashKey = HASH_KEY_PREFIX + driver.id();
+        log.info("Salvando/atualizando motorista no Redis: {}", driver.id());
 
-        final Map<String, String> driverData = Map.of(
-                "rating", String.valueOf(driver.rating()),
-                "vehicleType", driver.vehicleType()
+        final String hashKey = HASH_KEY_PREFIX + driver.id();
+        log.info("Hash key: {}", hashKey);
+
+        final Map<String, Object> driverData = Map.of(
+                "id", driver.id(),
+                "latitude", driver.latitude(),
+                "longitude", driver.longitude(),
+                "rating", driver.rating()
         );
+
         redisTemplate.opsForHash().putAll(hashKey, driverData);
         redisTemplate.expire(hashKey, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        log.info("Dados do motorista salvos no hash e expiracao definida: {} minutos", CACHE_TTL_MINUTES);
 
-        redisTemplate.opsForGeo().add(
-                GEO_KEY,
-                new Point(driver.longitude(), driver.latitude()),
-                driver.id()
-        );
-        redisTemplate.expire(GEO_KEY, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        final Point point = new Point(driver.longitude(), driver.latitude());
+        log.info("Salvando localização do motorista no GEO: {}", point);
+
+        Long added = redisTemplate.opsForGeo().add(GEO_KEY, point, driver.id());
+        log.info("Motorista adicionado ao GEO: {}, resultado add={}", driver.id(), added);
     }
 
     /**
@@ -70,19 +81,19 @@ public class DriverRedisRepository {
      * @param passengerLocation O ponto geográfico do passageiro.
      * @return A distância em metros.
      */
-    public int getDistanceInMeters(final String driverId, final Point passengerLocation) {
+    public long getDistanceInMeters(final String driverId, final Point passengerLocation) {
 
         String passengerTempKey = "passenger:location:" + UUID.randomUUID().toString();
 
         try {
             redisTemplate.opsForGeo().add(GEO_KEY, passengerLocation, passengerTempKey);
-            Distance distance = redisTemplate.opsForGeo().distance(
+            final Distance distance = redisTemplate.opsForGeo().distance(
                     GEO_KEY,
                     driverId,
                     passengerTempKey,
                     RedisGeoCommands.DistanceUnit.METERS
             );
-            return (distance != null) ? (int) distance.getValue() : Integer.MAX_VALUE;
+            return (distance != null) ? (long) distance.getValue() : Long.MAX_VALUE;
 
         } finally {
             redisTemplate.opsForGeo().remove(GEO_KEY, passengerTempKey);
@@ -96,15 +107,26 @@ public class DriverRedisRepository {
      * @return Uma lista de IDs dos motoristas encontrados.
      */
     public List<String> findNearbyDriverIds(final Point center, final double radiusInMeters) {
+        log.info("Buscando motoristas próximos de: {} com raio: {} metros", center, radiusInMeters);
 
         final Circle circle = new Circle(center, new Distance(radiusInMeters, RedisGeoCommands.DistanceUnit.METERS));
+        log.info("Círculo de busca: centro={}, raio={}", circle.getCenter(), circle.getRadius().getValue());
 
-        final GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResult = redisTemplate.opsForGeo().radius(GEO_KEY, circle);
+        final GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResult =
+                redisTemplate.opsForGeo().radius(GEO_KEY, circle);
 
-        if (geoResult == null) return List.of();
+        if (geoResult == null) {
+            log.warn("GeoResults retornou nulo para centro: {} e raio: {}", center, radiusInMeters);
+            return List.of();
+        }
+
+        log.info("GeoResults encontrados: {}", geoResult.getContent().size());
+        geoResult.getContent().forEach(result ->
+                log.info("Driver encontrado: {} na posição {}", result.getContent().getName(), result.getContent().getPoint())
+        );
 
         return geoResult.getContent().stream()
-                .map(result -> (String) result.getContent().getName())
+                .map(result -> result.getContent().getName().toString())
                 .toList();
     }
 
@@ -114,7 +136,18 @@ public class DriverRedisRepository {
      * @return Um DTO com os detalhes do motorista.
      */
     public ActiveDriverDTO findById(final String driverId) {
-        return (ActiveDriverDTO) redisTemplate.opsForValue().get(HASH_KEY_PREFIX + driverId);
+
+        final Map<Object, Object> map = redisTemplate.opsForHash().entries(HASH_KEY_PREFIX + driverId);
+
+        if (map.isEmpty())
+            return null;
+
+        return new ActiveDriverDTO(
+                map.get("id").toString(),
+                ((Number) map.get("latitude")).doubleValue(),
+                ((Number) map.get("longitude")).doubleValue(),
+                ((Number) map.get("rating")).doubleValue()
+        );
     }
 
     /**

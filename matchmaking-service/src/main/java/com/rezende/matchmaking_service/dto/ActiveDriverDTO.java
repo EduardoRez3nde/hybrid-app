@@ -4,16 +4,14 @@ public record ActiveDriverDTO(
         String id,
         double longitude,
         double latitude,
-        double rating,
-        String vehicleType
+        double rating
 ) {
     public static ActiveDriverDTO of(final DriverStatusUpdateEvent event) {
         return new ActiveDriverDTO(
                 event.driverId(),
                 event.longitude(),
                 event.latitude(),
-                event.rating(),
-                event.vehicleType()
+                event.rating()
         );
     }
 }

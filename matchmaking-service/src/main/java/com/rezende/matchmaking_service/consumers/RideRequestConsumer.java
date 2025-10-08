@@ -27,7 +27,7 @@ public class RideRequestConsumer {
             backoff = @Backoff(delay = 1000, multiplier = 2.0),
             dltTopicSuffix = ".DLT")
     @KafkaListener(
-            topics = "${app.kafka.topics.ride-requested-events}",
+            topics = "${app.kafka.topics.ride-request-event}",
             groupId = "${spring.kafka.consumer.group-id}")
     public void handleRideRequestedEvent(@Payload final RideRequestedEventDTO event, final Acknowledgment ack) {
 

@@ -8,20 +8,20 @@ import java.time.Instant;
 public record DriverStatusUpdateEvent(
         String driverId,
         OperationalStatus newStatus,
+        double rating,
         Instant eventTimestamp,
         double latitude,
-        double longitude,
-        String vehicleType
+        double longitude
 ) implements DomainEvent {
 
     public static DriverStatusUpdateEvent of(final DriverProfile driver) {
         return new DriverStatusUpdateEvent(
                 driver.getUserId().toString(),
                 driver.getOperationalStatus(),
+                driver.getAverageRating(),
                 Instant.now(),
-                driver.getCurrentLocation().getX(),
                 driver.getCurrentLocation().getY(),
-                null
+                driver.getCurrentLocation().getX()
         );
     }
 

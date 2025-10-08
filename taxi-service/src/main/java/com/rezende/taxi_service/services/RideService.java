@@ -11,6 +11,7 @@ import com.rezende.taxi_service.event.RideRejectedByDriverEvent;
 import com.rezende.taxi_service.event.RideRequestedEvent;
 import com.rezende.taxi_service.exceptions.BusinessRuleException;
 import com.rezende.taxi_service.exceptions.RideNotFoundException;
+import com.rezende.taxi_service.mapper.RideEventMapper;
 import com.rezende.taxi_service.repositories.RideRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -57,7 +58,7 @@ public class RideService {
                 Instant.now()
         );
 
-        rideEventProducer.sendRideRequestedEvent(event);
+        rideEventProducer.sendRideRequestedEvent(RideEventMapper.toDTO(event));
 
         return new RideCreationResponseDTO(
                 savedRide.getId().toString(),
@@ -71,7 +72,7 @@ public class RideService {
     public void driverAssigned(final DriverAssignedToRideEventDTO event) {
 
         final Ride ride = rideRepository.findById(UUID.fromString(event.rideId()))
-                .orElseThrow(() -> new RideNotFoundException("Ride with id %s not found"));
+                .orElseThrow(() -> new RideNotFoundException("Ride with id %s not found", event.rideId()));
 
         ride.setDriverId(UUID.fromString(event.driverId()));
         ride.setStatus(RideStatus.ACCEPTED);
@@ -83,7 +84,7 @@ public class RideService {
     public void acceptRide(final UUID driverId, final UUID rideId) {
 
         final Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RideNotFoundException("Race with id %s not found."));
+                .orElseThrow(() -> new RideNotFoundException("Race with id %s not found.", rideId));
 
         if (ride.getStatus() != RideStatus.ACCEPTED) {
             throw new BusinessRuleException("This race is not pending accessibility.");
@@ -108,7 +109,7 @@ public class RideService {
     public void rejectRide(final UUID driverId, final UUID rideId) {
 
         final Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RideNotFoundException("Race with id %s not found"));
+                .orElseThrow(() -> new RideNotFoundException("Race with id %s not found", rideId));
 
         if (ride.getStatus() != RideStatus.ACCEPTED) {
             throw new BusinessRuleException("This race is not pending acceptance/rejection.");

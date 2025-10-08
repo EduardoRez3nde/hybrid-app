@@ -59,7 +59,6 @@ public class MatchmakingService {
                         .id(driver.id())
                         .location(new Point(driver.longitude(), driver.latitude()))
                         .rating(driver.rating())
-                        .vehicleType(driver.vehicleType())
                         .build()
                 ).toList();
 

@@ -3,14 +3,16 @@ package com.rezende.driver_service.services;
 import com.rezende.driver_service.dto.*;
 import com.rezende.driver_service.entities.DriverProfile;
 import com.rezende.driver_service.enums.ApprovalStatus;
+import com.rezende.driver_service.enums.OperationalStatus;
 import com.rezende.driver_service.events.*;
 import com.rezende.driver_service.exceptions.DriverNotFoundException;
-import com.rezende.driver_service.exceptions.DriverNotPendingVerificationException;
+import com.rezende.driver_service.exceptions.DriverPendingVerificationException;
 import com.rezende.driver_service.mapper.DriverProfileFactory;
 import com.rezende.driver_service.repositories.DriverProfileRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,7 +90,17 @@ public class DriverService {
         final DriverProfile driver = driverRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", userId));
 
+        if (driver.getApprovalStatus() != ApprovalStatus.APPROVED
+                && dto.status() == OperationalStatus.ONLINE) {
+            throw new DriverPendingVerificationException("Driver is not approved and cannot go ONLINE");
+        }
+
         driver.setOperationalStatus(dto.status());
+
+        if (dto.latitude() != null && dto.longitude() != null) {
+            final Point point = geometryFactory.createPoint(new Coordinate(dto.longitude(), dto.latitude()));
+            driver.setCurrentLocation(point);
+        }
 
         final DriverProfile driverSave = driverRepository.save(driver);
 
@@ -104,7 +116,7 @@ public class DriverService {
                 .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not Found", userId));
 
         if (driver.getApprovalStatus() != ApprovalStatus.PENDING_APPROVAL)
-            throw new DriverNotPendingVerificationException("This driver is not pending verification.");
+            throw new DriverPendingVerificationException("This driver is pending verification.");
 
         driver.setApprovalStatus(dto.newStatus());
 

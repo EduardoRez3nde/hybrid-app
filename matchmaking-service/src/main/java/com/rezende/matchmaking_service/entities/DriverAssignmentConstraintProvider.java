@@ -1,6 +1,7 @@
 package com.rezende.matchmaking_service.entities;
 
 import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import ai.timefold.solver.core.api.score.stream.Constraint;
 import ai.timefold.solver.core.api.score.stream.ConstraintFactory;
 import ai.timefold.solver.core.api.score.stream.ConstraintProvider;
@@ -25,7 +26,7 @@ public class DriverAssignmentConstraintProvider implements ConstraintProvider {
     private Constraint mustAssignADriver(final ConstraintFactory factory) {
         return factory.forEach(RideRequest.class)
                 .filter(ride -> ride.getAssignedDriver() == null)
-                .penalizeLong(HardSoftScore.ONE_HARD)
+                .penalizeLong(HardSoftLongScore.ONE_HARD)
                 .asConstraint("Assign a driver");
     }
 
@@ -37,7 +38,7 @@ public class DriverAssignmentConstraintProvider implements ConstraintProvider {
         return factory.forEach(RideRequest.class)
                 .join(DriverRedisRepository.class)
                 .filter((ride, repo) -> ride.getAssignedDriver() != null)
-                .penalizeLong(HardSoftScore.ONE_SOFT,
+                .penalizeLong(HardSoftLongScore.ONE_SOFT,
                     (ride, repo) -> repo.getDistanceInMeters(
                             ride.getAssignedDriver().getId(),
                             ride.getPickupLocation())
@@ -54,7 +55,7 @@ public class DriverAssignmentConstraintProvider implements ConstraintProvider {
     private Constraint maximizeDriverRating(final ConstraintFactory factory) {
         return factory.forEach(RideRequest.class)
                 .filter(ride -> ride.getAssignedDriver() != null)
-                .reward(HardSoftScore.ONE_SOFT,
+                .reward(HardSoftLongScore.ONE_SOFT,
                         ride -> {
                             double rating = ride.getAssignedDriver().getRating();
                             return (int) (rating * 100);
