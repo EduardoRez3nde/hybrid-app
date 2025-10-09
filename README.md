@@ -1,0 +1,1 @@
+![fluxo-app-hybrid.svg](fluxo-app-hybrid.svg)

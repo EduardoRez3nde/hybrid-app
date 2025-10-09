@@ -32,23 +32,22 @@ public class RatingService {
     }
 
     @Transactional
-    public void submitRating(final RatingRequestDTO dto) {
+    public void submitRating(final String passengerId, final String rideId, final RatingRequestDTO dto) {
 
-        final Ride ride = rideRepository.findById(UUID.fromString(dto.rideId()))
-                .orElseThrow(() -> new RideNotFoundException("Ride with id %s not found", dto.rideId()));
+        final UUID rideUuid = UUID.fromString(rideId);
+        final Ride ride = rideRepository.findById(UUID.fromString(rideId))
+                .orElseThrow(() -> new RideNotFoundException("Ride with id %s not found", rideId));
 
         if (ride.getStatus() != RideStatus.COMPLETED) {
             throw new BusinessRuleException("Only completed races can be evaluated.");
         }
-
         final RideRating rideRating = RideRating.builder()
-                .rideId(ride.getId())
+                .rideId(rideUuid)
                 .driverId(ride.getDriverId())
-                .passengerId(ride.getPassengerId())
+                .passengerId(rideUuid)
                 .rating(dto.rating())
                 .comment(dto.comment())
                 .build();
-
         rideRatingRepository.save(rideRating);
         rideEventProducer.sendDriverRatedEvent(DriverRatedEvent.of(ride, dto));
     }

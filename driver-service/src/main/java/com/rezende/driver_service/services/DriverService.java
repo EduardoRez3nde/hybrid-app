@@ -150,7 +150,7 @@ public class DriverService {
         log.info("Recebido evento de avaliação para o motorista {}", event.driverId());
 
         final DriverProfile driver = driverRepository.findById(UUID.fromString(event.driverId()))
-                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not found"));
+                .orElseThrow(() -> new DriverNotFoundException("Driver with id %s not found", event.driverId()));
 
         final double newAverage = calculateNewAverage(driver.getAverageRating(), driver.getTotalRatings(), event.rating());
         driver.setAverageRating(newAverage);
